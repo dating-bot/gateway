@@ -1,0 +1,23 @@
+networks:
+  gateway-network: {}
+
+services:
+  gateway_server:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: gateway-server
+    restart: unless-stopped
+    volumes:
+      - ./config.toml:/app/config.toml
+    networks:
+      - gateway-network
+    command: ["uv", "-q", "run", "python3", "-m", "gateway"]
+    ports:
+      - "50051:50051"
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
