@@ -3,7 +3,7 @@ import signal
 
 import grpclib.server
 import structlog
-from aiogram import Router
+from aiogram import Dispatcher, Router
 from dishka.integrations.aiogram import setup_dishka
 
 from gateway.app.http.webhook_app import create_aiohttp_app, start_http_runner
@@ -11,6 +11,7 @@ from gateway.app.server import di
 from gateway.app.server.grpc_handler import GatewayServiceHandler
 from gateway.app.server.health import create_health_service
 from gateway.app.server.utils import configure_logger
+from gateway.app.telegram.handlers import register_handlers
 from gateway.infra import GlobalConfig, GrpcServerConfig, HttpServerConfig, TelegramBotConfig
 
 log = structlog.stdlib.get_logger("gateway.server")
@@ -48,7 +49,9 @@ async def main() -> None:
         )
 
     router = await di.container.get(Router)
-    setup_dishka(di.container, router, auto_inject=True)
+    register_handlers(router)
+    dispatcher = await di.container.get(Dispatcher)
+    setup_dishka(di.container, dispatcher, auto_inject=True)
 
     http_app = await create_aiohttp_app(di.container)
     http_cfg = await di.container.get(HttpServerConfig)

@@ -1,10 +1,13 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+import structlog
 import yaml
 
 if TYPE_CHECKING:
     from gateway.adapters.telegram.callback_router.radix_router_adapter import RadixCallbackRouterAdapter
+
+log = structlog.stdlib.get_logger("gateway.infra.callback_routes_yaml")
 
 
 def _mapping_str_object(obj: object) -> dict[str, object]:
@@ -54,6 +57,7 @@ def load_routes_from_yaml_file(
         path = path_val if isinstance(path_val, str) else route_key
         handler_val = route_data.get("handler")
         if not isinstance(handler_val, str) or not handler_val:
+            log.warning("Skipping route with missing or invalid handler", route_key=route_key)
             continue
 
         requires_raw = route_data.get("requires", {})

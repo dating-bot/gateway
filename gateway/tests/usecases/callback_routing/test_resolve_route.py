@@ -1,5 +1,5 @@
 from gateway.domain.resolved_callback import ResolvedCallback
-from gateway.protocols.callback_routing.router import CallbackRouterProtocol
+from gateway.protocols.callback_routing.protocol import CallbackRouterProtocol
 from gateway.usecases.callback_routing.resolve_route import ResolveCallbackRouteUsecase
 
 

@@ -19,5 +19,11 @@ class TelegramBotConfig(BaseModel):
         t = self.bot_token.strip()
         return t or _DEV_BOT_TOKEN_PLACEHOLDER
 
+    def effective_webhook_secret(self) -> str | None:
+        if self.webhook_secret_token is None:
+            return None
+        s = self.webhook_secret_token.strip()
+        return s or None
+
     def is_using_placeholder_token(self) -> bool:
         return not self.bot_token.strip()

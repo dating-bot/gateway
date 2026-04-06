@@ -1,1 +1,1 @@
-from gateway.protocols.callback_routing.router import CallbackRouterProtocol as CallbackRouterProtocol
+from gateway.protocols.callback_routing.protocol import CallbackRouterProtocol as CallbackRouterProtocol

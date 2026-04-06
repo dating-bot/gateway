@@ -25,15 +25,11 @@ async def create_aiohttp_app(container: AsyncContainer) -> web.Application:
 
     setup_application(app, dispatcher, bot=bot)
 
-    secret = telegram_cfg.webhook_secret_token
-    if secret is not None and secret.strip() == "":
-        secret = None
-
     webhook_handler = SimpleRequestHandler(
         dispatcher,
         bot,
         handle_in_background=True,
-        secret_token=secret,
+        secret_token=telegram_cfg.effective_webhook_secret(),
     )
     webhook_handler.register(app, path=telegram_cfg.webhook_path)
 

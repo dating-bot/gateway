@@ -3,7 +3,7 @@ from typing import final, override
 
 from gateway.domain.resolved_callback import ResolvedCallback
 from gateway.pkg.routing.radix_tree import RadixTree
-from gateway.protocols.callback_routing.router import CallbackRouterProtocol
+from gateway.protocols.callback_routing.protocol import CallbackRouterProtocol
 
 
 @final

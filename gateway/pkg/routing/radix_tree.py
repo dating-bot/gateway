@@ -97,13 +97,12 @@ class RadixTree:
 
         if "*" in node.children:
             param_node = node.children["*"]
-            if param_node.param_name:
-                params[param_node.param_name] = segment
+            new_params = {**params, param_node.param_name: segment} if param_node.param_name else params
             return self._match_recursive(
                 param_node,
                 segments,
                 index + 1,
-                params,
+                new_params,
             )
 
         return None

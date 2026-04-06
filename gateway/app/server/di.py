@@ -6,7 +6,6 @@ from dishka.integrations.aiogram import AiogramProvider
 
 from gateway import adapters, infra, protocols, usecases
 from gateway.app.server import grpc_handler
-from gateway.app.telegram.handlers import register_handlers
 
 
 @final
@@ -27,9 +26,7 @@ class TelegramProvider(dishka.Provider):
 
     @dishka.provide
     def provide_router(self) -> Router:
-        router = Router()
-        register_handlers(router)
-        return router
+        return Router()
 
     @dishka.provide
     def provide_dispatcher(self, router: Router) -> Dispatcher:
