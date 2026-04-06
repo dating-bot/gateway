@@ -1,0 +1,71 @@
+routes:
+  like:
+    path: "like"
+    handler: "handle_like"
+    requires:
+      active: true
+
+  skip:
+    path: "skip"
+    handler: "handle_skip"
+    requires:
+      active: true
+
+  "undo:last":
+    path: "undo:last"
+    handler: "handle_undo"
+    requires:
+      active: true
+
+  "super_like:{profile_id}":
+    path: "super_like:{profile_id}"
+    handler: "handle_super_like"
+    requires:
+      active: true
+      subscription: "PREMIUM"
+
+  "menu:profile:edit":
+    path: "menu:profile:edit"
+    handler: "handle_profile_edit"
+    requires:
+      active: true
+
+  "menu:profile:view":
+    path: "menu:profile:view"
+    handler: "handle_profile_view"
+    requires:
+      active: true
+
+  "menu:settings":
+    path: "menu:settings"
+    handler: "handle_settings"
+    requires:
+      active: true
+
+  "billing:subscribe":
+    path: "billing:subscribe"
+    handler: "handle_subscribe"
+
+  "billing:boost":
+    path: "billing:boost"
+    handler: "handle_boost"
+    requires:
+      active: true
+
+  "billing:cancel":
+    path: "billing:cancel"
+    handler: "handle_cancel_sub"
+    requires:
+      active: true
+
+  "admin:ban:{user_id}":
+    path: "admin:ban:{user_id}"
+    handler: "handle_ban"
+    requires:
+      role: "admin"
+
+  "admin:unban:{user_id}":
+    path: "admin:unban:{user_id}"
+    handler: "handle_unban"
+    requires:
+      role: "admin"

@@ -4,11 +4,15 @@ from typing import ClassVar, override
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, TomlConfigSettingsSource
 
 from gateway.infra.grpc import GrpcServerConfig
+from gateway.infra.http_server import HttpServerConfig
+from gateway.infra.telegram import TelegramBotConfig
 
 
 class GlobalConfig(BaseSettings):
     debug: bool = False
     grpc_server: GrpcServerConfig
+    http_server: HttpServerConfig
+    telegram: TelegramBotConfig
 
     @classmethod
     def load(cls) -> "GlobalConfig":

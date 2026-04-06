@@ -1,0 +1,1 @@
+from gateway.adapters.telegram.callback_router import RadixCallbackRouterAdapter as RadixCallbackRouterAdapter
