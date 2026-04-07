@@ -33,6 +33,9 @@ class FakeProfileService:
     async def upload_photo(self, request: ProfileServiceProtocol.UploadPhotoRequest) -> int:
         return 0
 
+    async def get_presigned_url(self, photo_id: int) -> str:
+        return ""
+
 
 class FakeCache:
     def __init__(self, stored: ProfileServiceProtocol.GetProfileResult | None = None) -> None:

@@ -5,6 +5,7 @@ from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
 from external_clients.profile_api.v1.profile_pb2 import (
     CreateProfileRequest,
     Gender,
+    GetPresignedUrlRequest,
     GetProfileRequest,
     SetGeoRequest,
     UpdateProfileRequest,
@@ -23,6 +24,9 @@ class ProfileServiceClientAdapter(ProfileServiceProtocol):
         response = await self._stub.GetProfile(GetProfileRequest(telegram_id=telegram_id))
         lat = response.latitude if response.HasField("latitude") else None
         lon = response.longitude if response.HasField("longitude") else None
+        # Список уже отфильтрован на стороне profile_service (только активные).
+        # Не отсекаем по is_active здесь: в proto3 bool по умолчанию false, если поле не сериализовано.
+        photo_ids = [p.photo_id for p in response.photos]
         return ProfileServiceProtocol.GetProfileResult(
             found=response.found,
             profile_id=response.profile_id,
@@ -30,6 +34,7 @@ class ProfileServiceClientAdapter(ProfileServiceProtocol):
             age=response.age,
             city=response.city,
             bio=response.bio,
+            photo_ids=photo_ids,
             latitude=lat,
             longitude=lon,
         )
@@ -85,3 +90,8 @@ class ProfileServiceClientAdapter(ProfileServiceProtocol):
             )
         )
         return response.photo_id
+
+    @override
+    async def get_presigned_url(self, photo_id: int) -> str:
+        response = await self._stub.GetPresignedUrl(GetPresignedUrlRequest(photo_id=photo_id))
+        return response.url

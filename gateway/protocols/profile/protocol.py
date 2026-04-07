@@ -11,6 +11,7 @@ class ProfileServiceProtocol(Protocol):
         age: int
         city: str
         bio: str
+        photo_ids: list[int] = pydantic.Field(default_factory=list)
         latitude: float | None = None
         longitude: float | None = None
 
@@ -50,3 +51,5 @@ class ProfileServiceProtocol(Protocol):
     async def set_geo(self, request: "ProfileServiceProtocol.SetGeoRequest") -> bool: ...
 
     async def upload_photo(self, request: "ProfileServiceProtocol.UploadPhotoRequest") -> int: ...
+
+    async def get_presigned_url(self, photo_id: int) -> str: ...

@@ -15,6 +15,7 @@ from aiogram.types import (
 )
 from dishka import FromDishka
 
+from gateway.app.server.telegram.registration_fsm import PhotoPrompt
 from gateway.usecases.profile.errors import ProfileNotFoundForMutationError, ProfileServiceTransportError
 from gateway.usecases.profile.get_profile import GetProfile
 from gateway.usecases.profile.set_geo import SetGeo
@@ -71,7 +72,8 @@ def register_geo_and_menu(router: Router) -> None:
     ) -> None:
         if message.from_user is None or message.location is None:
             return
-        if await state.get_state() is not None:
+        current = await state.get_state()
+        if current is not None and current != PhotoPrompt.waiting.state:
             _ = await message.answer("Сначала завершите текущий шаг (/cancel или /skip_photo).")
             return
         response = await get_profile.execute(GetProfile.Request(telegram_id=message.from_user.id))
@@ -93,4 +95,7 @@ def register_geo_and_menu(router: Router) -> None:
             log.exception("set_geo failed")
             _ = await message.answer("Не удалось сохранить гео. Попробуй позже.")
             return
-        _ = await message.answer("Геолокация сохранена.")
+        reply = "Геолокация сохранена."
+        if await state.get_state() == PhotoPrompt.waiting.state:
+            reply += " Пришли фото или /skip_photo."
+        _ = await message.answer(reply)
