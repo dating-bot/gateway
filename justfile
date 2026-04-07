@@ -17,7 +17,7 @@ generate-gateway-api-linux:
     rm -rf gateway_api
     mkdir -p gateway_api
     docker run --rm -v ./gateway_api:/gateway_api:rw -v ./api:/api:ro -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
-        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+        uv run --with protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2 \
             protol --in-place --create-package --python-out gateway_api \
             protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=api --python_out=. --grpclib_python_out=. --mypy_out=. \
                 gateway_api/v1/gateway.proto
@@ -26,10 +26,41 @@ generate-gateway-api-windows:
     Remove-Item -Recurse -Force .\\gateway_api
     mkdir gateway_api
     docker run --rm -v .\\gateway_api:/gateway_api:rw -v .\\api:/api:ro -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
-        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+        uv run --with protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2 \
             protol --in-place --create-package --python-out gateway_api \
             protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=api --python_out=. --grpclib_python_out=. --mypy_out=. \
                 gateway_api/v1/gateway.proto
+
+# Клиент profile-service: proto из ../profile_service/api, вывод в external_clients (как в pechkin — Docker + protol + protoc)
+generate-profile-service-client:
+    (cd ../profile_service && buf lint && buf format --write)
+    just generate-profile-service-client-{{ os() }}
+
+alias generate-profile-service-client-macos := generate-profile-service-client-linux
+
+generate-profile-service-client-linux:
+    rm -rf external_clients/profile_api
+    mkdir -p external_clients
+    docker run --rm \
+        -v ./external_clients:/external_clients:rw \
+        -v ../profile_service/api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                profile_api/v1/profile.proto
+
+generate-profile-service-client-windows:
+    Remove-Item -Recurse -Force .\\external_clients\\profile_api -ErrorAction SilentlyContinue
+    mkdir -Force .\\external_clients | Out-Null
+    docker run --rm \
+        -v .\\external_clients:/external_clients:rw \
+        -v ..\\profile_service\\api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                profile_api/v1/profile.proto
 
 lint:
     {{ manage }} ruff format .

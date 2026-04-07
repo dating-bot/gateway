@@ -23,4 +23,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/external_clients"
 ENTRYPOINT []

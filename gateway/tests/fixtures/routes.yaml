@@ -1,0 +1,59 @@
+# Маршруты callback_data для gateway
+# path_pattern: сегменты через ":", {param} — wildcard захватывает значение
+
+like:{profile_id}:
+  handler: handle_like
+  requires:
+    active: true
+
+skip:{profile_id}:
+  handler: handle_skip
+  requires:
+    active: true
+
+undo:last:
+  handler: handle_undo
+  requires:
+    active: true
+
+super_like:{profile_id}:
+  handler: handle_super_like
+  requires:
+    active: true
+    subscription: PREMIUM
+
+menu:profile:view:
+  handler: handle_profile_view
+  requires: {}
+
+menu:profile:edit:
+  handler: handle_profile_edit
+  requires:
+    active: true
+
+menu:settings:
+  handler: handle_settings
+  requires: {}
+
+billing:subscribe:
+  handler: handle_subscribe
+  requires: {}
+
+billing:boost:
+  handler: handle_boost
+  requires:
+    active: true
+
+billing:cancel:
+  handler: handle_cancel_sub
+  requires: {}
+
+admin:ban:{user_id}:
+  handler: handle_ban
+  requires:
+    role: admin
+
+admin:unban:{user_id}:
+  handler: handle_unban
+  requires:
+    role: admin

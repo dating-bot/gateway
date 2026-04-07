@@ -15,6 +15,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+cicd = [
+    "basedpyright>=1.36.1",
+    "mypy>=1.19.1",
+    "ty>=0.0.2",
+]
 dev = [
     "basedpyright>=1.36.1",
     "hatch>=1.16.2",
@@ -24,8 +29,14 @@ dev = [
     "types-protobuf>=5.28.0",
 ]
 testing = [
+    "diff-cover>=10.2.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=0.23.0",
+    "pytest-cache>=1.0",
+    "pytest-cov>=7.0.0",
+    "pytest-icdiff>=0.9",
+    "pytest-mock>=3.15.1",
+    "pytest-xdist>=3.8.0",
 ]
 
 [build-system]
@@ -54,19 +65,25 @@ reportMissingImports = "error"
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportUnusedParameter = "warning"
-exclude = ["**/.venv", "**/__pycache__", "gateway_api", "gateway/tests", "scripts"]
+exclude = ["**/.venv", "**/__pycache__", "gateway_api", "external_clients", "profile_api", "gateway/tests", "scripts"]
 typeCheckingMode = "recommended"
 
 [tool.mypy]
-exclude = [".*_test.py", "gateway_api", "scripts"]
+exclude = [".*_test.py", "gateway_api", "external_clients", "profile_api", "scripts"]
 plugins = "pydantic.mypy"
 
 [tool.ruff]
-exclude = [".venv", "gateway_api", "scripts"]
+exclude = [".venv", "gateway_api", "external_clients", "profile_api", "scripts"]
 line-length = 120
 indent-width = 4
 target-version = "py313"
 fix = true
+
+[tool.coverage.run]
+omit = ["gateway_api", "external_clients", "profile_api", "scripts"]
+
+[tool.coverage.report]
+omit = ["gateway_api", "external_clients", "profile_api", "scripts"]
 
 [tool.ruff.format]
 preview = true
@@ -93,7 +110,7 @@ ban-relative-imports = "all"
 max-line-length = 128
 
 [tool.pytest.ini_options]
-pythonpath = "."
+pythonpath = [".", "external_clients"]
 testpaths = ["gateway", "gateway/tests"]
 addopts = []
 filterwarnings = ["ignore::DeprecationWarning"]
