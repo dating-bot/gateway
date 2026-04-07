@@ -11,7 +11,7 @@ class CallbackRouterProtocol(Protocol):
 
     def register(
         self,
+        path_params: str,
         handler_id: str,
-        path_params: dict[str, str],
         requires: dict[str, object] | None = None,
     ) -> None: ...

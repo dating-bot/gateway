@@ -31,6 +31,31 @@ generate-gateway-api-windows:
             protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=api --python_out=. --grpclib_python_out=. --mypy_out=. \
                 gateway_api/v1/gateway.proto
 
+generate-external-clients:
+    just generate-external-clients-{{ os() }}
+
+alias generate-external-clients-macos := generate-external-clients-linux
+
+generate-external-clients-linux:
+    rm -rf external_clients/profile_api
+    mkdir -p external_clients
+    uv run scripts/protogen.py \
+        --what client \
+        --path ../profile_service/api/profile_api/v1/profile.proto \
+        --incl ../profile_service/api \
+        --cmpl grpclib \
+        --outd external_clients
+
+generate-external-clients-windows:
+    Remove-Item -Recurse -Force .\\external_clients\\profile_api -ErrorAction SilentlyContinue
+    mkdir -Force external_clients
+    uv run scripts/protogen.py \
+        --what client \
+        --path ..\\profile_service\\api\\profile_api\\v1\\profile.proto \
+        --incl ..\\profile_service\\api \
+        --cmpl grpclib \
+        --outd external_clients
+
 lint:
     {{ manage }} ruff format .
     {{ manage }} ruff check --fix .

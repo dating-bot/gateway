@@ -1,0 +1,1 @@
+from gateway.protocols.profile.protocol import ProfileServiceProtocol as ProfileServiceProtocol

@@ -33,8 +33,12 @@ class LockUserMiddleware(BaseMiddleware):
         uid = user_id_from_update(event)
         if uid is None:
             return await handler(event, data)
-        got = await self._valkey.set_nx(f"lock:user:{uid}", "1", self._ttl)
+        lock_key = f"lock:user:{uid}"
+        got = await self._valkey.set_nx(lock_key, "1", self._ttl)
         if not got:
             log.warning("user_lock_busy", user_id=uid)
             return None
-        return await handler(event, data)
+        try:
+            return await handler(event, data)
+        finally:
+            await self._valkey.delete(lock_key)

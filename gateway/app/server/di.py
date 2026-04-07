@@ -5,15 +5,14 @@ import aiogram
 import dishka
 import glide
 from dishka.integrations.aiogram import AiogramProvider
+from profile_api.v1.profile_grpc import ProfileServiceStub
 
 from gateway import adapters, infra, protocols, usecases
 from gateway.app.server import grpc_handler
 from gateway.app.server.telegram.handlers import register_handlers
-from gateway.app.server.telegram.middlewares import (
-    CallbackRadixAclMiddleware,
-    LockUserMiddleware,
-    RateLimitMiddleware,
-)
+from gateway.app.server.telegram.middlewares.callback_dispatch import CallbackRadixAclMiddleware
+from gateway.app.server.telegram.middlewares.lock_user import LockUserMiddleware
+from gateway.app.server.telegram.middlewares.rate_limit import RateLimitMiddleware
 
 
 @final
@@ -36,6 +35,14 @@ class InfraProvider(dishka.Provider):
 @final
 class AdapterProvider(dishka.Provider):
     scope = dishka.Scope.APP
+
+    profile_stub = dishka.provide(staticmethod(infra.provide_profile_stub))
+    """gRPC-стаб для profile_service"""
+
+    @dishka.provide
+    def profile_service_adapter(self, stub: ProfileServiceStub) -> protocols.ProfileServiceProtocol:
+        """адаптер profile_service (gRPC-клиент)"""
+        return adapters.ProfileServiceClientAdapter(_stub=stub)
 
     @dishka.provide
     def valkey_adapter(self, client: glide.GlideClient) -> protocols.CoordinationProtocol:
@@ -60,9 +67,13 @@ class AdapterProvider(dishka.Provider):
         return router
 
     @dishka.provide
-    def acl_adapter(self) -> protocols.AclChecker:
-        """заглушка ACL (разрешает всё — заменить на реальный адаптер)"""
-        return adapters.NullAclAdapter()
+    def acl_adapter(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        cache: protocols.CacheProtocol,
+    ) -> protocols.AclChecker:
+        """ACL на основе profile_service: active = профиль существует"""
+        return adapters.ProfileAclAdapter(profile_service=profile_service, cache=cache)
 
 
 @final
@@ -107,6 +118,63 @@ class AppProvider(dishka.Provider):
     def resolve_callback_route(self, router: protocols.CallbackRouterProtocol) -> usecases.ResolveCallbackRoute:
         """юзкейс разрешения callback-маршрута через radix-дерево"""
         return usecases.ResolveCallbackRoute(router=router)
+
+    @dishka.provide
+    def get_profile(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        cache: protocols.CacheProtocol,
+    ) -> usecases.GetProfile:
+        """юзкейс получения профиля с cache-aside"""
+        return usecases.GetProfile(profile_service=profile_service, cache=cache)
+
+    @dishka.provide
+    def invalidate_profile(self, cache: protocols.CacheProtocol) -> usecases.InvalidateProfile:
+        """юзкейс инвалидации профиля из кэша"""
+        return usecases.InvalidateProfile(cache=cache)
+
+    @dishka.provide
+    def create_profile(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        get_profile: usecases.GetProfile,
+    ) -> usecases.CreateProfile:
+        """создание профиля в profile_service + обновление кэша через GetProfile"""
+        return usecases.CreateProfile(profile_service=profile_service, get_profile=get_profile)
+
+    @dishka.provide
+    def update_profile(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        invalidate_profile: usecases.InvalidateProfile,
+        get_profile: usecases.GetProfile,
+    ) -> usecases.UpdateProfile:
+        """обновление профиля + инвалидация кэша и перезагрузка через GetProfile"""
+        return usecases.UpdateProfile(
+            profile_service=profile_service,
+            invalidate_profile=invalidate_profile,
+            get_profile=get_profile,
+        )
+
+    @dishka.provide
+    def set_geo(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        invalidate_profile: usecases.InvalidateProfile,
+    ) -> usecases.SetGeo:
+        """сохранение координат в profile_service + сброс кэша"""
+        return usecases.SetGeo(profile_service=profile_service, invalidate_profile=invalidate_profile)
+
+    @dishka.provide
+    def upload_profile_photo(
+        self,
+        profile_service: protocols.ProfileServiceProtocol,
+        invalidate_profile: usecases.InvalidateProfile,
+    ) -> usecases.UploadProfilePhoto:
+        return usecases.UploadProfilePhoto(
+            profile_service=profile_service,
+            invalidate_profile=invalidate_profile,
+        )
 
 
 def build_container() -> dishka.AsyncContainer:

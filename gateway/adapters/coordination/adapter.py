@@ -49,3 +49,10 @@ class CoordinationAdapter(CoordinationProtocol):
             return False
         else:
             return result is not None
+
+    @override
+    async def delete(self, key: str) -> None:
+        try:
+            _ = await self._client.delete([key])
+        except Exception as e:
+            log.warning("delete failed", key=key, error=str(e))

@@ -3,7 +3,7 @@ from typing import final, override
 
 import structlog
 
-from gateway.app.server.utils import unary
+from gateway.app.server.utils.unary import unary
 from gateway_api.v1 import gateway_pb2
 from gateway_api.v1.gateway_grpc import GatewayServiceBase
 

@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 from gateway.infra.callback_routing import CallbackRoutingConfig
 from gateway.infra.grpc import GrpcServerConfig
 from gateway.infra.http_server import HttpServerConfig
+from gateway.infra.profile_service import ProfileServiceConfig
 from gateway.infra.telegram import TelegramBotConfig
 from gateway.infra.valkey import ValkeyConfig
 
@@ -17,6 +18,7 @@ class GlobalConfig(BaseSettings):
     telegram: TelegramBotConfig
     callback_routing: CallbackRoutingConfig
     valkey: ValkeyConfig
+    profile_service: ProfileServiceConfig
 
     @classmethod
     def load(cls) -> "GlobalConfig":

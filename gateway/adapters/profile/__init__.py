@@ -1,0 +1,1 @@
+from gateway.adapters.profile.adapter import ProfileServiceClientAdapter as ProfileServiceClientAdapter

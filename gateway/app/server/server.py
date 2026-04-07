@@ -10,7 +10,7 @@ from gateway.app.server import di
 from gateway.app.server.grpc_handler import GatewayServiceHandler
 from gateway.app.server.health import create_health_service
 from gateway.app.server.http.webhook_app import create_aiohttp_app, start_http_runner
-from gateway.app.server.utils import configure_logger
+from gateway.app.server.utils.logger import configure_logger
 from gateway.infra import GlobalConfig, GrpcServerConfig, HttpServerConfig, TelegramBotConfig
 from gateway.infra.valkey import ValkeyRuntime
 
