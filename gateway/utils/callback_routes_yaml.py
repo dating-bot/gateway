@@ -59,4 +59,4 @@ def load_routes_from_yaml_file(
         requires_raw = route_data.get("requires", {})
         requires = _mapping_str_object(requires_raw)
 
-        router.register_route(path, handler_val, requires)
+        router.register(path, handler_val, requires)

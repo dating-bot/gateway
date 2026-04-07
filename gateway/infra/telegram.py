@@ -1,8 +1,5 @@
 from pydantic import BaseModel, Field
 
-# Valid-format placeholder when token is unset (dev/tests only). Not a secret.
-_DEV_BOT_TOKEN_PLACEHOLDER = "1234567890:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"  # noqa: S105
-
 
 class TelegramBotConfig(BaseModel):
     bot_token: str = Field(
@@ -16,8 +13,7 @@ class TelegramBotConfig(BaseModel):
     )
 
     def effective_bot_token(self) -> str:
-        t = self.bot_token.strip()
-        return t or _DEV_BOT_TOKEN_PLACEHOLDER
+        return self.bot_token.strip()
 
     def is_using_placeholder_token(self) -> bool:
         return not self.bot_token.strip()

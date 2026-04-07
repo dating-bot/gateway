@@ -16,6 +16,9 @@ dependencies = [
     "protobuf>=5.28.0",
     "typing-extensions>=4.15.0",
     "aiogram>=3.27.0",
+    "redis>=7.4.0",
+    "valkey-glide>=2.2.3; platform_system != 'Windows'",
+    "prometheus-client>=0.24.1",
 ]
 
 [dependency-groups]

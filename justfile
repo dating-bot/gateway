@@ -39,3 +39,6 @@ lint:
 
 run-tests:
     {{ manage }} pytest --failed-first --verbose --no-header
+
+infra:
+    docker compose up -d valkey

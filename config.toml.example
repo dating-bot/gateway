@@ -12,3 +12,15 @@ port = 8080
 bot_token = ""
 webhook_path = "/webhook"
 # webhook_secret_token = "optional-from-setwebhook"
+
+[callback_routing]
+# routes_file = "gateway/tests/fixtures/routes.yaml"
+
+[valkey]
+# host = "valkey"     # docker-compose (имя сервиса в сети)
+# host = "localhost"  # локальный Valkey/Redis вне Docker
+# port = 6379
+# use_tls = false
+# fsm_db = 0
+# rate_limit_per_minute = 30
+# user_lock_ttl_sec = 5

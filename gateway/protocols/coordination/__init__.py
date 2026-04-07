@@ -1,0 +1,1 @@
+from gateway.protocols.coordination.protocol import CoordinationProtocol as CoordinationProtocol

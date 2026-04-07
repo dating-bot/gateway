@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from gateway.adapters.telegram.callback_router.radix_router_adapter import RadixCallbackRouterAdapter
-from gateway.infra.callback_routes_yaml import load_routes_from_yaml_file
 from gateway.pkg.routing.radix_tree import RadixTree
+from gateway.utils.callback_routes_yaml import load_routes_from_yaml_file
 
 
 def test_insert_single_route():

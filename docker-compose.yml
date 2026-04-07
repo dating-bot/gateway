@@ -1,13 +1,33 @@
-networks:
-  gateway-network: {}
-
 services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: gateway-valkey
+    restart: unless-stopped
+    networks:
+      - gateway-network
+    volumes:
+      - valkey-data:/data
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.5"
+    #       memory: 512m
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
   gateway_server:
     build:
       context: .
       dockerfile: dockerfile
     container_name: gateway-server
     restart: unless-stopped
+    depends_on:
+      valkey:
+        condition: service_healthy
     volumes:
       - ./config.toml:/app/config.toml
     networks:
@@ -16,9 +36,20 @@ services:
     ports:
       - "50051:50051"
       - "8080:8080"
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.5"
+    #       memory: 512m
     healthcheck:
       test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+networks:
+  gateway-network: {}
+
+volumes:
+  valkey-data: {}

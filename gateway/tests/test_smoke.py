@@ -7,3 +7,5 @@ def test_global_config_model_has_fields() -> None:
     assert "grpc_server" in fields
     assert "http_server" in fields
     assert "telegram" in fields
+    assert "callback_routing" in fields
+    assert "valkey" in fields

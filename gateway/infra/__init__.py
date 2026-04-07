@@ -1,4 +1,10 @@
+from gateway.infra.callback_routing import CallbackRoutingConfig as CallbackRoutingConfig
 from gateway.infra.config import GlobalConfig as GlobalConfig
 from gateway.infra.grpc import GrpcServerConfig as GrpcServerConfig
 from gateway.infra.http_server import HttpServerConfig as HttpServerConfig
 from gateway.infra.telegram import TelegramBotConfig as TelegramBotConfig
+from gateway.infra.valkey import ValkeyConfig as ValkeyConfig
+from gateway.infra.valkey import ValkeyRuntime as ValkeyRuntime
+from gateway.infra.valkey import provide_glide_client as provide_glide_client
+from gateway.infra.valkey import provide_valkey_runtime as provide_valkey_runtime
+from gateway.utils.callback_routes_yaml import load_routes_from_yaml_file as load_routes_from_yaml_file

@@ -3,9 +3,11 @@ from typing import ClassVar, override
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, TomlConfigSettingsSource
 
+from gateway.infra.callback_routing import CallbackRoutingConfig
 from gateway.infra.grpc import GrpcServerConfig
 from gateway.infra.http_server import HttpServerConfig
 from gateway.infra.telegram import TelegramBotConfig
+from gateway.infra.valkey import ValkeyConfig
 
 
 class GlobalConfig(BaseSettings):
@@ -13,6 +15,8 @@ class GlobalConfig(BaseSettings):
     grpc_server: GrpcServerConfig
     http_server: HttpServerConfig
     telegram: TelegramBotConfig
+    callback_routing: CallbackRoutingConfig
+    valkey: ValkeyConfig
 
     @classmethod
     def load(cls) -> "GlobalConfig":

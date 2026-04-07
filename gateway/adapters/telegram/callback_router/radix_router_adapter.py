@@ -3,7 +3,7 @@ from typing import final, override
 
 from gateway.domain.resolved_callback import ResolvedCallback
 from gateway.pkg.routing.radix_tree import RadixTree
-from gateway.protocols.callback_routing.router import CallbackRouterProtocol
+from gateway.protocols.callback_routing.callback import CallbackRouterProtocol
 
 
 @final
@@ -12,7 +12,10 @@ class RadixCallbackRouterAdapter(CallbackRouterProtocol):
     _tree: RadixTree = field(default_factory=RadixTree)
 
     @override
-    def match(self, callback_data: str) -> ResolvedCallback | None:
+    def match(
+        self,
+        callback_data: str,
+    ) -> ResolvedCallback | None:
         raw = self._tree.match(callback_data)
         if raw is None:
             return None
@@ -22,10 +25,11 @@ class RadixCallbackRouterAdapter(CallbackRouterProtocol):
             requires=raw.requires,
         )
 
-    def register_route(
+    @override
+    def register(
         self,
-        path: str,
+        path_params: str,
         handler_id: str,
         requires: dict[str, object] | None = None,
     ) -> None:
-        self._tree.insert(path, handler_id, requires)
+        self._tree.insert(path_params, handler_id, requires)

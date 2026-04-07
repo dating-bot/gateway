@@ -1,0 +1,1 @@
+from gateway.adapters.coordination.adapter import CoordinationAdapter as CoordinationAdapter

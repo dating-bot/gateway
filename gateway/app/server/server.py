@@ -6,12 +6,13 @@ import structlog
 from aiogram import Router
 from dishka.integrations.aiogram import setup_dishka
 
-from gateway.app.http.webhook_app import create_aiohttp_app, start_http_runner
 from gateway.app.server import di
 from gateway.app.server.grpc_handler import GatewayServiceHandler
 from gateway.app.server.health import create_health_service
+from gateway.app.server.http.webhook_app import create_aiohttp_app, start_http_runner
 from gateway.app.server.utils import configure_logger
 from gateway.infra import GlobalConfig, GrpcServerConfig, HttpServerConfig, TelegramBotConfig
+from gateway.infra.valkey import ValkeyRuntime
 
 log = structlog.stdlib.get_logger("gateway.server")
 
@@ -42,7 +43,7 @@ async def main() -> None:
     log.info("Starting gateway server")
 
     telegram_cfg = await di.container.get(TelegramBotConfig)
-    if telegram_cfg.is_using_placeholder_token():
+    if not telegram_cfg.bot_token:
         log.warning(
             "telegram.bot_token is empty; using dev placeholder (set GATEWAY_TELEGRAM__BOT_TOKEN for production)",
         )
@@ -81,6 +82,8 @@ async def main() -> None:
         _ = grpc_task.cancel()
         _ = await asyncio.gather(grpc_task, return_exceptions=True)
         await http_runner.cleanup()
+        valkey_rt = await di.container.get(ValkeyRuntime)
+        await valkey_rt.close()
         await di.container.close()
         log.info("Server stopped")
 
