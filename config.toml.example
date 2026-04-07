@@ -17,10 +17,11 @@ webhook_path = "/webhook"
 # routes_file = "gateway/tests/fixtures/routes.yaml"
 
 [valkey]
-# host = "valkey"     # docker-compose (имя сервиса в сети)
-# host = "localhost"  # локальный Valkey/Redis вне Docker
+# host = "localhost"
 # port = 6379
 # use_tls = false
-# fsm_db = 0
+# Логические БД на одном Valkey: /0 FSM, /1 coordination+cache (как в dating_bot_docs_v5 §6)
+# fsm_database = 0
+# coordination_database = 1
 # rate_limit_per_minute = 30
 # user_lock_ttl_sec = 5

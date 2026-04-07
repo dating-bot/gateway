@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 from dishka import AsyncContainer
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from prometheus_client import generate_latest
 
 from gateway.infra.telegram import TelegramBotConfig
 from gateway.protocols.coordination import CoordinationProtocol
@@ -23,7 +23,11 @@ async def ready_handler(request: web.Request) -> web.Response:
 
 
 async def metrics_handler(_: web.Request) -> web.Response:
-    return web.Response(body=generate_latest(), content_type=CONTENT_TYPE_LATEST)
+    return web.Response(
+        body=generate_latest(),
+        content_type="text/plain; version=1.0.0",
+        charset="utf-8",
+    )
 
 
 def _register_monitoring_routes(app: web.Application) -> None:
