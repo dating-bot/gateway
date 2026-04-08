@@ -47,7 +47,6 @@ class RateLimitMiddleware(BaseMiddleware):
         if count > self._limit:
             rate_limit_exceeded_total.inc()
             log.info("rate limit exceeded, dropping update", user_id=uid, count=count)
-            # Ответить пользователю если это callback или message
             if event.callback_query:
                 await event.callback_query.answer("⏳ Слишком много запросов, подожди немного")
             elif event.message:
