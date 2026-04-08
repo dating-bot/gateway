@@ -1,4 +1,5 @@
 import asyncio
+import html
 import urllib.request
 
 import structlog
@@ -27,6 +28,7 @@ _EDIT_MENU_KB = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Возраст", callback_data="edit:age")],
         [InlineKeyboardButton(text="Город", callback_data="edit:city")],
         [InlineKeyboardButton(text="Био", callback_data="edit:bio")],
+        [InlineKeyboardButton(text="📷 Фото", callback_data="profile:photos:menu")],
         [InlineKeyboardButton(text="◀️ Назад", callback_data="menu:profile:view")],
     ]
 )
@@ -53,7 +55,13 @@ async def _fetch_url_bytes(url: str) -> bytes:
 
 
 def _profile_caption_html(profile_name: str, age: int, city: str, gender_label: str, bio: str) -> str:
-    return f"👤 <b>{profile_name}</b>, {age}\n📍 {city}\n👫 {gender_label}\n\n{bio}"
+    """Telegram HTML: экранируем пользовательский текст, иначе parse_mode ломается и callback не отвечает."""
+    return (
+        f"👤 <b>{html.escape(profile_name)}</b>, {age}\n"
+        f"📍 {html.escape(city)}\n"
+        f"👫 {html.escape(gender_label)}\n\n"
+        f"{html.escape(bio)}"
+    )
 
 
 async def _send_profile_photos_to_chat(
@@ -95,45 +103,49 @@ async def handle_profile_view(
     """Показать анкету текущего пользователя (фото по presigned URL + текст)."""
     del resolved
     telegram_id = query.from_user.id
-    await get_profile.invalidate(telegram_id)
-    profile = await get_profile.execute(telegram_id)
+    try:
+        await get_profile.invalidate(telegram_id)
+        profile = await get_profile.execute(telegram_id)
 
-    if profile is None:
-        _ = await query.answer("Профиль не найден. Создай через /start")
-        return
+        if profile is None:
+            _ = await query.answer("Профиль не найден. Создай через /start")
+            return
 
-    if query.message is None:
-        _ = await query.answer("Ошибка сообщения")
-        return
+        if query.message is None:
+            _ = await query.answer("Ошибка сообщения")
+            return
 
-    gender_label = {"male": "Мужчина", "female": "Женщина"}.get(profile.gender.value, "—")
-    text = _profile_caption_html(profile.name, profile.age, profile.city, gender_label, profile.bio)
+        gender_label = {"male": "Мужчина", "female": "Женщина"}.get(profile.gender.value, "—")
+        text = _profile_caption_html(profile.name, profile.age, profile.city, gender_label, profile.bio)
 
-    active_photos = [p for p in profile.photos if p.is_active]
-    buffers: list[BufferedInputFile] = []
+        active_photos = [p for p in profile.photos if p.is_active]
+        buffers: list[BufferedInputFile] = []
 
-    for ph in active_photos:
-        try:
-            url = await profile_service.get_presigned_url(ph.photo_id)
-            data = await _fetch_url_bytes(url)
-            buffers.append(BufferedInputFile(data, filename=f"photo_{ph.photo_id}.jpg"))
-        except Exception:
-            log.exception("presigned photo fetch failed", photo_id=ph.photo_id)
+        for ph in active_photos:
+            try:
+                url = await profile_service.get_presigned_url(ph.photo_id)
+                data = await _fetch_url_bytes(url)
+                buffers.append(BufferedInputFile(data, filename=f"photo_{ph.photo_id}.jpg"))
+            except Exception:
+                log.exception("presigned photo fetch failed", photo_id=ph.photo_id)
 
-    bot = query.bot
-    if bot is None:
-        _ = await query.answer("Ошибка: бот недоступен")
-        return
+        bot = query.bot
+        if bot is None:
+            _ = await query.answer("Ошибка: бот недоступен")
+            return
 
-    chat_id = query.message.chat.id
+        chat_id = query.message.chat.id
 
-    if not buffers:
-        _ = await query.message.answer(text, parse_mode="HTML")
+        if not buffers:
+            _ = await query.message.answer(text, parse_mode="HTML")
+            _ = await query.answer()
+            return
+
+        await _send_profile_photos_to_chat(bot, chat_id, text, buffers)
         _ = await query.answer()
-        return
-
-    await _send_profile_photos_to_chat(bot, chat_id, text, buffers)
-    _ = await query.answer()
+    except Exception:
+        log.exception("handle_profile_view failed", telegram_id=telegram_id)
+        _ = await query.answer("Не удалось показать профиль. Попробуй ещё раз.", show_alert=True)
 
 
 async def handle_profile_edit(

@@ -34,11 +34,10 @@ class RateLimitMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        update: Update | None = data.get("event_update")
-        if update is None:
+        if not isinstance(event, Update):
             return await handler(event, data)
 
-        uid = user_id_from_update(update)
+        uid = user_id_from_update(event)
         if uid is None:
             return await handler(event, data)
 
@@ -49,10 +48,10 @@ class RateLimitMiddleware(BaseMiddleware):
             rate_limit_exceeded_total.inc()
             log.info("rate limit exceeded, dropping update", user_id=uid, count=count)
             # Ответить пользователю если это callback или message
-            if update.callback_query:
-                await update.callback_query.answer("⏳ Слишком много запросов, подожди немного")
-            elif update.message:
-                await update.message.answer("⏳ Слишком много запросов, подожди немного")
+            if event.callback_query:
+                await event.callback_query.answer("⏳ Слишком много запросов, подожди немного")
+            elif event.message:
+                await event.message.answer("⏳ Слишком много запросов, подожди немного")
             return None
 
         return await handler(event, data)

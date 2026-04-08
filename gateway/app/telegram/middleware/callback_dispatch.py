@@ -31,11 +31,10 @@ class CallbackRadixAclMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        update: Update | None = data.get("event_update")
-        if update is None or update.callback_query is None:
+        if not isinstance(event, Update) or event.callback_query is None:
             return await handler(event, data)
 
-        query: CallbackQuery = update.callback_query
+        query: CallbackQuery = event.callback_query
         callback_data = query.data or ""
         user_id = query.from_user.id
 

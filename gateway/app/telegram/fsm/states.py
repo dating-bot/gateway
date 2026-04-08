@@ -21,3 +21,9 @@ class PhotoPromptState(StatesGroup):
     """Ожидание фото от пользователя."""
 
     waiting_photo = State()
+
+
+class PhotoManageState(StatesGroup):
+    """Добавление фото из меню редактирования."""
+
+    waiting_photo = State()

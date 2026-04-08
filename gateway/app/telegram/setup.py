@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 from gateway.app.telegram.fsm.edit_profile import edit_profile_router
 from gateway.app.telegram.fsm.registration import registration_router
 from gateway.app.telegram.handlers.callback_reply import callback_router
+from gateway.app.telegram.handlers.profile_photos import profile_photos_router
 from gateway.app.telegram.handlers.commands import commands_router
 from gateway.app.telegram.handlers.geo import geo_router
 from gateway.app.telegram.middleware import (
@@ -56,6 +57,7 @@ def create_dispatcher(  # noqa: PLR0913
     _ = dp.include_router(commands_router)
     _ = dp.include_router(registration_router)
     _ = dp.include_router(edit_profile_router)
+    _ = dp.include_router(profile_photos_router)
     _ = dp.include_router(geo_router)
     _ = dp.include_router(callback_router)
 

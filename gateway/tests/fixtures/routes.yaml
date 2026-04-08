@@ -31,6 +31,21 @@ menu:profile:edit:
   requires:
     active: true
 
+profile:photos:menu:
+  handler: handle_profile_photos_menu
+  requires:
+    active: true
+
+photos:add:
+  handler: handle_photos_add
+  requires:
+    active: true
+
+photos:del:{photo_id}:
+  handler: handle_photos_delete
+  requires:
+    active: true
+
 edit:{field}:
   handler: handle_edit_field_select
   requires:

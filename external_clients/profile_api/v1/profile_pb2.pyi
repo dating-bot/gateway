@@ -275,6 +275,34 @@ class UploadPhotoResponse(google.protobuf.message.Message):
 Global___UploadPhotoResponse: typing_extensions.TypeAlias = UploadPhotoResponse
 
 @typing.final
+class DeletePhotoRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    TELEGRAM_ID_FIELD_NUMBER: builtins.int
+    PHOTO_ID_FIELD_NUMBER: builtins.int
+    telegram_id: builtins.int
+    photo_id: builtins.int
+
+    def __init__(self, *, telegram_id: builtins.int=..., photo_id: builtins.int=...) -> None:
+        ...
+
+    def ClearField(self, field_name: typing.Literal['photo_id', b'photo_id', 'telegram_id', b'telegram_id']) -> None:
+        ...
+Global___DeletePhotoRequest: typing_extensions.TypeAlias = DeletePhotoRequest
+
+@typing.final
+class DeletePhotoResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    SUCCESS_FIELD_NUMBER: builtins.int
+    success: builtins.bool
+
+    def __init__(self, *, success: builtins.bool=...) -> None:
+        ...
+
+    def ClearField(self, field_name: typing.Literal['success', b'success']) -> None:
+        ...
+Global___DeletePhotoResponse: typing_extensions.TypeAlias = DeletePhotoResponse
+
+@typing.final
 class GetPresignedUrlRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PHOTO_ID_FIELD_NUMBER: builtins.int

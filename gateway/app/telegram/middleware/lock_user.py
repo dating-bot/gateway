@@ -25,11 +25,10 @@ class LockUserMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        update: Update | None = data.get("event_update")
-        if update is None:
+        if not isinstance(event, Update):
             return await handler(event, data)
 
-        uid = user_id_from_update(update)
+        uid = user_id_from_update(event)
         if uid is None:
             return await handler(event, data)
 
@@ -37,6 +36,10 @@ class LockUserMiddleware(BaseMiddleware):
         acquired = await self._coordination.set_nx(lock_key, _LOCK_VALUE, self._lock_ttl_sec)
         if not acquired:
             log.debug("lock not acquired, dropping update", user_id=uid)
+            if event.callback_query is not None:
+                await event.callback_query.answer(
+                    "⏳ Подожди, предыдущий запрос ещё обрабатывается.",
+                )
             return None
 
         try:

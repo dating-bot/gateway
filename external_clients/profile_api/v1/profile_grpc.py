@@ -39,6 +39,10 @@ class ProfileServiceBase(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def DeletePhoto(self, stream: 'grpclib.server.Stream[profile_api.v1.profile_pb2.DeletePhotoRequest, profile_api.v1.profile_pb2.DeletePhotoResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
     async def GetPresignedUrl(self, stream: 'grpclib.server.Stream[profile_api.v1.profile_pb2.GetPresignedUrlRequest, profile_api.v1.profile_pb2.GetPresignedUrlResponse]') -> None:
         pass
 
@@ -79,6 +83,12 @@ class ProfileServiceBase(abc.ABC):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 profile_api.v1.profile_pb2.UploadPhotoRequest,
                 profile_api.v1.profile_pb2.UploadPhotoResponse,
+            ),
+            '/profile_api.v1.ProfileService/DeletePhoto': grpclib.const.Handler(
+                self.DeletePhoto,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                profile_api.v1.profile_pb2.DeletePhotoRequest,
+                profile_api.v1.profile_pb2.DeletePhotoResponse,
             ),
             '/profile_api.v1.ProfileService/GetPresignedUrl': grpclib.const.Handler(
                 self.GetPresignedUrl,
@@ -127,6 +137,12 @@ class ProfileServiceStub:
             '/profile_api.v1.ProfileService/UploadPhoto',
             profile_api.v1.profile_pb2.UploadPhotoRequest,
             profile_api.v1.profile_pb2.UploadPhotoResponse,
+        )
+        self.DeletePhoto = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/profile_api.v1.ProfileService/DeletePhoto',
+            profile_api.v1.profile_pb2.DeletePhotoRequest,
+            profile_api.v1.profile_pb2.DeletePhotoResponse,
         )
         self.GetPresignedUrl = grpclib.client.UnaryUnaryMethod(
             channel,

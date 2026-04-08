@@ -5,6 +5,7 @@ import structlog
 from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
 from external_clients.profile_api.v1.profile_pb2 import (
     CreateProfileRequest,
+    DeletePhotoRequest,
     Gender,
     GetPresignedUrlRequest,
     GetProfileRequest,
@@ -88,6 +89,10 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
             UploadPhotoRequest(telegram_id=telegram_id, data=data, content_type=content_type)
         )
         return resp.photo_id
+
+    @override
+    async def delete_photo(self, telegram_id: int, photo_id: int) -> None:
+        _ = await self._stub.DeletePhoto(DeletePhotoRequest(telegram_id=telegram_id, photo_id=photo_id))
 
     @override
     async def get_presigned_url(self, photo_id: int) -> str:

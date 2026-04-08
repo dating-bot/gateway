@@ -25,7 +25,7 @@ from gateway.protocols import (
     CoordinationProtocol,
     ProfileServiceProtocol,
 )
-from gateway.usecases import CreateProfile, GetProfile, ResolveCallbackRoute, SetGeo, UpdateProfile, UploadPhoto
+from gateway.usecases import CreateProfile, DeletePhoto, GetProfile, ResolveCallbackRoute, SetGeo, UpdateProfile, UploadPhoto
 
 
 @final
@@ -102,6 +102,9 @@ class UsecaseProvider(dishka.Provider):
 
     upload_photo = dishka.provide(UploadPhoto)
     """use case загрузки фото"""
+
+    delete_photo = dishka.provide(DeletePhoto)
+    """use case удаления фото"""
 
 
 @final
