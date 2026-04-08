@@ -1,5 +1,39 @@
-debug = true
+debug = false
 
 [grpc_server]
 host = "0.0.0.0"
 port = 50051
+
+[http_server]
+host = "0.0.0.0"
+port = 8080
+
+[telegram]
+# Обязательные поля (см. gateway.infra.telegram.TelegramConfig)
+token = "0000000000:REPLACE_WITH_BOT_TOKEN_FROM_BOTFATHER"
+webhook_path = "/webhook"
+# Тот же секрет, что передаётся в setWebhook (Telegram шлёт заголовок X-Telegram-Bot-Api-Secret-Token)
+webhook_secret = "generate-a-random-secret"
+# Публичный HTTPS origin без завершающего слэша (к нему добавляется webhook_path)
+webhook_host = "https://your-domain.example"
+
+[valkey]
+host = "localhost"
+port = 6379
+use_tls = false
+# DB для aiogram FSM (redis-py)
+fsm_db = 0
+# DB для Glide: кэш профиля, rate limit, распределённые локи
+cache_db = 1
+rate_limit_per_minute = 30
+user_lock_ttl_sec = 5
+profile_cache_ttl_sec = 300
+
+[profile_service]
+# gRPC profile-service (см. ProfileServiceConfig: host + port, не URL)
+host = "localhost"
+port = 50052
+
+[callback_routing]
+# Путь относительно рабочей директории процесса (в Docker: WORKDIR /app → файл /app/routes.yaml)
+routes_file = "routes.yaml"

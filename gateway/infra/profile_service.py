@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 import grpclib.client
 from pydantic import BaseModel, Field
 
-from profile_api.v1.profile_grpc import ProfileServiceStub
+from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
 
 
 class ProfileServiceConfig(BaseModel):

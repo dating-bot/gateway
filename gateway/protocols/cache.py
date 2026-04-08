@@ -4,8 +4,6 @@ from typing import Protocol, overload
 
 
 class CacheProtocol(Protocol):
-    """Кэш произвольных значений через сериализацию в bytes."""
-
     @overload
     async def get(self, key: str) -> bytes | None: ...
 

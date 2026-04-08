@@ -2,11 +2,8 @@ from typing import final, override
 
 import structlog
 
-from gateway.domain.profile import Gender as DomainGender
-from gateway.domain.profile import PhotoInfo, Profile
-from gateway.protocols.profile import ProfileServiceProtocol
-from profile_api.v1.profile_grpc import ProfileServiceStub
-from profile_api.v1.profile_pb2 import (
+from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
+from external_clients.profile_api.v1.profile_pb2 import (
     CreateProfileRequest,
     Gender,
     GetPresignedUrlRequest,
@@ -15,6 +12,9 @@ from profile_api.v1.profile_pb2 import (
     UpdateProfileRequest,
     UploadPhotoRequest,
 )
+from gateway.domain.profile import Gender as DomainGender
+from gateway.domain.profile import PhotoInfo, Profile
+from gateway.protocols.profile import ProfileServiceProtocol
 
 log = structlog.stdlib.get_logger("gateway.adapters.GrpcProfileServiceAdapter")
 
@@ -29,8 +29,6 @@ _GENDER_REVERSE: dict[int, DomainGender] = {v: k for k, v in _GENDER_MAP.items()
 
 @final
 class GrpcProfileServiceAdapter(ProfileServiceProtocol):
-    """Адаптер ProfileServiceProtocol через gRPC-клиент к profile-service."""
-
     def __init__(self, *, stub: ProfileServiceStub) -> None:
         self._stub = stub
 
@@ -70,7 +68,7 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
 
     @override
     async def update_profile(self, request: ProfileServiceProtocol.UpdateRequest) -> None:
-        await self._stub.UpdateProfile(
+        _ = await self._stub.UpdateProfile(
             UpdateProfileRequest(
                 telegram_id=request.telegram_id,
                 name=request.name,
@@ -82,7 +80,7 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
 
     @override
     async def set_geo(self, telegram_id: int, latitude: float, longitude: float) -> None:
-        await self._stub.SetGeo(SetGeoRequest(telegram_id=telegram_id, latitude=latitude, longitude=longitude))
+        _ = await self._stub.SetGeo(SetGeoRequest(telegram_id=telegram_id, latitude=latitude, longitude=longitude))
 
     @override
     async def upload_photo(self, telegram_id: int, data: bytes, content_type: str) -> int:

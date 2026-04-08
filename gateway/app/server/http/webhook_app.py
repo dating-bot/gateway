@@ -9,7 +9,7 @@ from gateway.infra.telegram import TelegramConfig
 from gateway.protocols.coordination import CoordinationProtocol
 
 
-async def _health_handler(request: web.Request) -> web.Response:
+async def _health_handler(_: web.Request) -> web.Response:
     return web.Response(text="ok")
 
 
@@ -21,7 +21,7 @@ async def _ready_handler(request: web.Request) -> web.Response:
     return web.Response(text="not ready", status=503)
 
 
-async def _metrics_handler(request: web.Request) -> web.Response:
+async def _metrics_handler(_: web.Request) -> web.Response:
     data = generate_latest()
     return web.Response(body=data, content_type=CONTENT_TYPE_LATEST)
 

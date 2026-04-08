@@ -9,16 +9,6 @@ log = structlog.stdlib.get_logger("gateway.infra.callback_routes_yaml")
 
 
 def load_routes_from_yaml_file(path: str, router: CallbackRouterProtocol) -> None:
-    """Прочитать routes.yaml и зарегистрировать все маршруты в router.
-
-    Формат YAML:
-        «path:with:{param}»:
-          handler: handle_something
-          requires:
-            active: true
-            subscription: PREMIUM   # опционально
-            role: admin             # опционально
-    """
     with open(path, encoding="utf-8") as f:  # noqa: PTH123
         data: dict[str, dict[str, object]] = yaml.safe_load(f) or {}
 

@@ -1,10 +1,3 @@
-"""CallbackRadixAclMiddleware — маршрутизация callback_data + ACL.
-
-Порядок: ТРЕТИЙ middleware (после Lock).
-Только для callback_query updates.
-Резолвит callback_data → ResolvedCallback, проверяет ACL, прокидывает в data.
-"""
-
 from collections.abc import Awaitable, Callable
 from typing import Any, final
 

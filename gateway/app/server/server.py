@@ -5,15 +5,13 @@ import grpclib.server
 import structlog
 from aiohttp import web
 
+from gateway import infra, protocols, usecases
 from gateway.app.server import di
 from gateway.app.server.grpc_handler import GatewayServiceHandler
 from gateway.app.server.health import create_health_service
 from gateway.app.server.http.webhook_app import create_webhook_app
 from gateway.app.server.utils import configure_logger
 from gateway.app.telegram.setup import create_bot, create_dispatcher, create_fsm_storage
-from gateway.infra import GlobalConfig, GrpcServerConfig
-from gateway.infra.telegram import TelegramConfig
-from gateway.infra.valkey import ValkeyConfig
 from gateway.protocols.acl import AclCheckerProtocol
 from gateway.protocols.coordination import CoordinationProtocol
 from gateway.usecases.callback_routing.resolve import ResolveCallbackRoute
@@ -21,7 +19,7 @@ from gateway.usecases.callback_routing.resolve import ResolveCallbackRoute
 log = structlog.stdlib.get_logger("gateway.server")
 
 
-async def run_grpc_server(handler: GatewayServiceHandler, config: GrpcServerConfig) -> None:
+async def run_grpc_server(handler: GatewayServiceHandler, config: infra.GrpcServerConfig) -> None:
     server = grpclib.server.Server([handler, create_health_service()])
     await server.start(config.host, config.port)
     log.info("gRPC server started", host=config.host, port=config.port)
@@ -34,7 +32,7 @@ async def run_grpc_server(handler: GatewayServiceHandler, config: GrpcServerConf
 
 
 async def main() -> None:
-    config = await di.container.get(GlobalConfig)
+    config = await di.container.get(infra.GlobalConfig)
 
     configure_logger(
         json_mode=not config.debug,
@@ -44,12 +42,12 @@ async def main() -> None:
 
     # gRPC task
     grpc_handler = await di.container.get(GatewayServiceHandler)
-    grpc_config = await di.container.get(GrpcServerConfig)
+    grpc_config = await di.container.get(infra.GrpcServerConfig)
     grpc_task = asyncio.create_task(run_grpc_server(grpc_handler, grpc_config))
 
     # aiogram Bot + Dispatcher
-    telegram_config: TelegramConfig = await di.container.get(TelegramConfig)
-    valkey_config: ValkeyConfig = await di.container.get(ValkeyConfig)
+    telegram_config: infra.TelegramConfig = await di.container.get(infra.TelegramConfig)
+    valkey_config: infra.ValkeyConfig = await di.container.get(infra.ValkeyConfig)
     coordination: CoordinationProtocol = await di.container.get(CoordinationProtocol)
     resolve_usecase: ResolveCallbackRoute = await di.container.get(ResolveCallbackRoute)
     acl: AclCheckerProtocol = await di.container.get(AclCheckerProtocol)
@@ -65,10 +63,13 @@ async def main() -> None:
         container=di.container,
     )
 
-    # Установить webhook
-    webhook_url = f"{telegram_config.webhook_host}{telegram_config.webhook_path}"
-    await bot.set_webhook(url=webhook_url, secret_token=telegram_config.webhook_secret)
-    log.info("Telegram webhook set", url=webhook_url)
+    # Установить webhook (опционально)
+    if telegram_config.webhook_host:
+        webhook_url = f"{telegram_config.webhook_host}{telegram_config.webhook_path}"
+        _ = await bot.set_webhook(url=webhook_url, secret_token=telegram_config.webhook_secret)
+        log.info("Telegram webhook set", url=webhook_url)
+    else:
+        log.info("webhook_host not configured, skipping set_webhook")
 
     # aiohttp app
     app = create_webhook_app(
@@ -98,13 +99,13 @@ async def main() -> None:
     log.info("Gateway started successfully")
 
     try:
-        await shutdown_event.wait()
+        _ = await shutdown_event.wait()
     except KeyboardInterrupt:
         log.info("Keyboard interrupt received")
     finally:
         log.info("Stopping server")
-        grpc_task.cancel()
-        await asyncio.gather(grpc_task, return_exceptions=True)
+        _ = grpc_task.cancel()
+        _ = await asyncio.gather(grpc_task, return_exceptions=True)
         await runner.cleanup()
         await bot.session.close()
         await di.container.close()

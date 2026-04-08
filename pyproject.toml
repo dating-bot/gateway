@@ -12,6 +12,12 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "grpclib[protobuf]>=0.4.9",
     "protobuf>=5.28.0",
+    "aiohttp>=3.13.5",
+    "aiogram>=3.27.0",
+    "PyYAML>=6.0.1",
+    "valkey-glide>=2.2.3; sys_platform != 'win32'",
+    "prometheus-client>=0.24.1",
+    "redis>=7.4.0",
 ]
 
 [dependency-groups]
@@ -65,7 +71,7 @@ reportMissingImports = "error"
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportUnusedParameter = "warning"
-exclude = ["**/.venv", "**/__pycache__", "gateway_api", "external_clients", "profile_api", "gateway/tests", "scripts"]
+exclude = ["**/.venv", "**/__pycache__", "gateway_api", "external_clients", "profile_api", "gateway/tests", "scripts", "scripts/protogen.py"]
 typeCheckingMode = "recommended"
 
 [tool.mypy]
@@ -73,7 +79,8 @@ exclude = [".*_test.py", "gateway_api", "external_clients", "profile_api", "scri
 plugins = "pydantic.mypy"
 
 [tool.ruff]
-exclude = [".venv", "gateway_api", "external_clients", "profile_api", "scripts"]
+exclude = [".venv", "gateway_api", "external_clients", "profile_api", "scripts", "scripts/protogen.py"]
+force-exclude = true
 line-length = 120
 indent-width = 4
 target-version = "py313"

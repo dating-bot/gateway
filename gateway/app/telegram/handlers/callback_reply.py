@@ -9,13 +9,19 @@ from typing import Any
 
 import structlog
 from aiogram import Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from dishka.integrations.aiogram import FromDishka
 
-from gateway.app.telegram.handlers.profile_view import handle_profile_edit, handle_profile_view
+from gateway.app.telegram.handlers.profile_view import (
+    handle_edit_field_select,
+    handle_profile_edit,
+    handle_profile_view,
+)
 from gateway.app.telegram.handlers.stubs import handle_stub
 from gateway.app.telegram.middleware.callback_dispatch import RESOLVED_CALLBACK_KEY
 from gateway.domain.resolved_callback import ResolvedCallback
+from gateway.protocols.profile import ProfileServiceProtocol
 from gateway.usecases.profile.get_profile import GetProfile
 from gateway.usecases.profile.upload_photo import UploadPhoto
 
@@ -49,7 +55,9 @@ _STUB_HANDLERS = {
 async def dispatch_callback(
     query: CallbackQuery,
     get_profile: FromDishka[GetProfile],
-    upload_photo: FromDishka[UploadPhoto],
+    _upload_photo: FromDishka[UploadPhoto],
+    profile_service: FromDishka[ProfileServiceProtocol],
+    state: FSMContext,
     **data: Any,
 ) -> None:
     resolved: ResolvedCallback | None = data.get(RESOLVED_CALLBACK_KEY)
@@ -61,11 +69,13 @@ async def dispatch_callback(
     log.debug("dispatching callback", handler_id=handler_id, path_params=resolved.path_params)
 
     if handler_id == "handle_profile_view":
-        await handle_profile_view(query, resolved, get_profile)
+        await handle_profile_view(query, resolved, get_profile, profile_service)
     elif handler_id == "handle_profile_edit":
         await handle_profile_edit(query, resolved, get_profile)
+    elif handler_id == "handle_edit_field_select":
+        await handle_edit_field_select(query, resolved, state, get_profile)
     elif handler_id in _STUB_HANDLERS:
         await handle_stub(query, resolved)
     else:
         log.warning("unknown handler_id in callback dispatch", handler_id=handler_id)
-        await query.answer("❓ Неизвестная команда")
+        _ = await query.answer("❓ Неизвестная команда")

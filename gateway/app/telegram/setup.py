@@ -6,9 +6,11 @@ from dishka import AsyncContainer
 from dishka.integrations.aiogram import setup_dishka
 from redis.asyncio import Redis
 
+from gateway.app.telegram.fsm.edit_profile import edit_profile_router
 from gateway.app.telegram.fsm.registration import registration_router
 from gateway.app.telegram.handlers.callback_reply import callback_router
 from gateway.app.telegram.handlers.commands import commands_router
+from gateway.app.telegram.handlers.geo import geo_router
 from gateway.app.telegram.middleware import (
     CallbackRadixAclMiddleware,
     LockUserMiddleware,
@@ -31,7 +33,7 @@ def create_fsm_storage(config: ValkeyConfig) -> RedisStorage:
     return RedisStorage(redis=redis)
 
 
-def create_dispatcher(
+def create_dispatcher(  # noqa: PLR0913
     *,
     storage: RedisStorage,
     coordination: CoordinationProtocol,
@@ -43,17 +45,18 @@ def create_dispatcher(
     """Собрать Dispatcher с middleware-цепочкой и роутерами."""
     dp = Dispatcher(storage=storage)
 
-    # Подключить dishka для инъекции usecase'ов в хендлеры
-    setup_dishka(container=container, router=dp)
+    setup_dishka(container=container, router=dp, auto_inject=True)
 
     # Порядок middleware важен: RateLimit → Lock → AclRadix
-    dp.update.outer_middleware(RateLimitMiddleware(coordination=coordination, limit=config.rate_limit_per_minute))
-    dp.update.outer_middleware(LockUserMiddleware(coordination=coordination, lock_ttl_sec=config.user_lock_ttl_sec))
-    dp.update.outer_middleware(CallbackRadixAclMiddleware(resolve_usecase=resolve_usecase, acl=acl))
+    _ = dp.update.outer_middleware(RateLimitMiddleware(coordination=coordination, limit=config.rate_limit_per_minute))
+    _ = dp.update.outer_middleware(LockUserMiddleware(coordination=coordination, lock_ttl_sec=config.user_lock_ttl_sec))
+    _ = dp.update.outer_middleware(CallbackRadixAclMiddleware(resolve_usecase=resolve_usecase, acl=acl))
 
     # Роутеры
-    dp.include_router(commands_router)
-    dp.include_router(registration_router)
-    dp.include_router(callback_router)
+    _ = dp.include_router(commands_router)
+    _ = dp.include_router(registration_router)
+    _ = dp.include_router(edit_profile_router)
+    _ = dp.include_router(geo_router)
+    _ = dp.include_router(callback_router)
 
     return dp

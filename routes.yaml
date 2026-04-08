@@ -1,6 +1,3 @@
-# Маршруты callback_data для gateway
-# path_pattern: сегменты через ":", {param} — wildcard захватывает значение
-
 like:{profile_id}:
   handler: handle_like
   requires:

@@ -10,8 +10,6 @@ log = structlog.stdlib.get_logger("gateway.usecases.SetGeo")
 
 @final
 class SetGeo:
-    """Сохранить геолокацию пользователя."""
-
     def __init__(self, *, profile_service: ProfileServiceProtocol, cache: CacheProtocol) -> None:
         self._profile_service = profile_service
         self._cache = cache

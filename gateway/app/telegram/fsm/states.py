@@ -12,9 +12,8 @@ class RegistrationState(StatesGroup):
 
 
 class EditProfileState(StatesGroup):
-    """FSM состояния для редактирования поля профиля."""
+    """Редактирование одного поля: выбор поля (inline) → ввод значения."""
 
-    choose_field = State()
     enter_value = State()
 
 

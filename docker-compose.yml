@@ -1,5 +1,6 @@
 networks:
-  gateway-network: {}
+  dating_bot_net:
+    external: true
 
 services:
   gateway_server:
@@ -11,10 +12,11 @@ services:
     volumes:
       - ./config.toml:/app/config.toml
     networks:
-      - gateway-network
+      - dating_bot_net
     command: ["uv", "-q", "run", "python3", "-m", "gateway"]
     ports:
       - "50051:50051"
+      - "8080:8080"
     healthcheck:
       test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
       interval: 10s

@@ -2,6 +2,7 @@ from typing import final
 
 import dishka
 
+from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
 from gateway.adapters import (
     GrpcProfileServiceAdapter,
     ProfileAclAdapter,
@@ -40,7 +41,7 @@ class InfraProvider(dishka.Provider):
     glide_client = dishka.provide(staticmethod(provide_glide_client))
     """GlideClient (Rust) для кэша и coordination"""
 
-    profile_stub = dishka.provide(staticmethod(provide_profile_stub))
+    profile_stub = dishka.provide(staticmethod(provide_profile_stub), provides=ProfileServiceStub)
     """gRPC-stub к profile-service"""
 
 

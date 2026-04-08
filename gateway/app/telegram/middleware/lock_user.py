@@ -1,10 +1,3 @@
-"""LockUserMiddleware — distributed lock для одновременного масштабирования.
-
-Порядок: ВТОРОЙ middleware (после RateLimitMiddleware).
-Гарантирует что только один pod обрабатывает update конкретного пользователя.
-При нескольких репликах: SET NX EX 5 → если False, drop (другой pod обрабатывает).
-"""
-
 from collections.abc import Awaitable, Callable
 from typing import Any, final
 
@@ -22,8 +15,6 @@ _LOCK_VALUE = "1"
 
 @final
 class LockUserMiddleware(BaseMiddleware):
-    """Distributed lock: один update пользователя обрабатывается одним pod'ом."""
-
     def __init__(self, *, coordination: CoordinationProtocol, lock_ttl_sec: int = 5) -> None:
         self._coordination = coordination
         self._lock_ttl_sec = lock_ttl_sec

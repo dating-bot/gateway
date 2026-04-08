@@ -5,8 +5,6 @@ from gateway.domain.profile import Gender, Profile
 
 
 class ProfileServiceProtocol(Protocol):
-    """Порт для работы с profile-service."""
-
     @dataclass
     class CreateRequest:
         telegram_id: int
@@ -28,16 +26,12 @@ class ProfileServiceProtocol(Protocol):
 
     async def get_profile(self, telegram_id: int) -> Profile | None: ...
 
-    async def create_profile(self, request: "ProfileServiceProtocol.CreateRequest") -> int:
-        """Возвращает profile_id."""
-        ...
+    async def create_profile(self, request: "ProfileServiceProtocol.CreateRequest") -> int: ...
 
     async def update_profile(self, request: "ProfileServiceProtocol.UpdateRequest") -> None: ...
 
     async def set_geo(self, telegram_id: int, latitude: float, longitude: float) -> None: ...
 
-    async def upload_photo(self, telegram_id: int, data: bytes, content_type: str) -> int:
-        """Возвращает photo_id."""
-        ...
+    async def upload_photo(self, telegram_id: int, data: bytes, content_type: str) -> int: ...
 
     async def get_presigned_url(self, photo_id: int) -> str: ...
