@@ -2,9 +2,12 @@ from typing import final
 
 import dishka
 
+from external_clients.match_api.v1.match_grpc import MatchServiceStub
 from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
+from external_clients.ranking_api.v1.ranking_grpc import RankingServiceStub
 from gateway.adapters import (
     GrpcProfileServiceAdapter,
+    MatchServiceAdapter,
     ProfileAclAdapter,
     RadixCallbackRouterAdapter,
     ValkeyCacheAdapter,
@@ -15,7 +18,9 @@ from gateway.infra import (
     CallbackRoutingConfig,
     GlobalConfig,
     provide_glide_client,
+    provide_match_stub,
     provide_profile_stub,
+    provide_ranking_stub,
 )
 from gateway.infra.callback_routes_yaml import load_routes_from_yaml_file
 from gateway.protocols import (
@@ -23,6 +28,7 @@ from gateway.protocols import (
     CacheProtocol,
     CallbackRouterProtocol,
     CoordinationProtocol,
+    MatchServiceProtocol,
     ProfileServiceProtocol,
 )
 from gateway.usecases import CreateProfile, DeletePhoto, GetProfile, ResolveCallbackRoute, SetGeo, UpdateProfile, UploadPhoto
@@ -43,6 +49,12 @@ class InfraProvider(dishka.Provider):
 
     profile_stub = dishka.provide(staticmethod(provide_profile_stub), provides=ProfileServiceStub)
     """gRPC-stub к profile-service"""
+
+    match_stub = dishka.provide(staticmethod(provide_match_stub), provides=MatchServiceStub)
+    """gRPC-stub к match-service"""
+
+    ranking_stub = dishka.provide(staticmethod(provide_ranking_stub), provides=RankingServiceStub)
+    """gRPC-stub к ranking-service"""
 
 
 @final
@@ -66,6 +78,18 @@ class AdapterProvider(dishka.Provider):
         provides=ProfileServiceProtocol,
     )
     """адаптер profile-service через gRPC"""
+
+    match_service_adapter = dishka.provide(
+        source=MatchServiceAdapter,
+        provides=MatchServiceProtocol,
+    )
+    """адаптер match-service через gRPC"""
+
+    ranking_service_adapter = dishka.provide(
+        source=RankingServiceAdapter,
+        provides=RankingServiceProtocol,
+    )
+    """адаптер ranking-service через gRPC"""
 
     acl_adapter = dishka.provide(
         source=ProfileAclAdapter,

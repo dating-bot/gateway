@@ -3,4 +3,6 @@ from gateway.protocols.cache import CacheProtocol as CacheProtocol
 from gateway.protocols.callback_router import CallbackRouterProtocol as CallbackRouterProtocol
 from gateway.protocols.callback_router import MatchResult as MatchResult
 from gateway.protocols.coordination import CoordinationProtocol as CoordinationProtocol
+from gateway.protocols.match_service import MatchServiceProtocol as MatchServiceProtocol
 from gateway.protocols.profile import ProfileServiceProtocol as ProfileServiceProtocol
+from gateway.protocols.ranking_service import RankingServiceProtocol as RankingServiceProtocol

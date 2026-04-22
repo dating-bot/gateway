@@ -37,7 +37,7 @@ class LockUserMiddleware(BaseMiddleware):
         if not acquired:
             log.debug("lock not acquired, dropping update", user_id=uid)
             if event.callback_query is not None:
-                await event.callback_query.answer(
+                _ = await event.callback_query.answer(
                     "⏳ Подожди, предыдущий запрос ещё обрабатывается.",
                 )
             return None
