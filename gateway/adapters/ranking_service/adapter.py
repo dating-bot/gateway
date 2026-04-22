@@ -19,6 +19,6 @@ class RankingServiceAdapter(RankingServiceProtocol):
         try:
             resp = await self._stub.GetNextCandidate(GetNextCandidateRequest(viewer_id=viewer_id))
             return (resp.profile_id, resp.queue_len)
-        except Exception as e:
+        except Exception:
             log.exception("get_next_candidate failed", viewer_id=viewer_id)
             return None

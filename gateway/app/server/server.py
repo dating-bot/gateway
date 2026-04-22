@@ -5,7 +5,7 @@ import grpclib.server
 import structlog
 from aiohttp import web
 
-from gateway import infra, protocols, usecases
+from gateway import infra
 from gateway.app.server import di
 from gateway.app.server.grpc_handler import GatewayServiceHandler
 from gateway.app.server.health import create_health_service

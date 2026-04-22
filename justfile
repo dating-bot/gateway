@@ -54,13 +54,73 @@ generate-profile-service-client-windows:
     Remove-Item -Recurse -Force .\\external_clients\\profile_api -ErrorAction SilentlyContinue
     mkdir -Force .\\external_clients | Out-Null
     docker run --rm \
-        -v .\\external_clients:/external_clients:rw \
-        -v ..\\profile_service\\api:/api:ro \
+        -v .\external_clients:/external_clients:rw \
+        -v ..\profile_service\api:/api:ro \
         -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
         uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
             protol --in-place --create-package --python-out external_clients \
             protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
                 profile_api/v1/profile.proto
+
+generate-match-service-client:
+    (cd ../match_service && buf lint && buf format --write)
+    just generate-match-service-client-{{ os() }}
+
+alias generate-match-service-client-macos := generate-match-service-client-linux
+
+generate-match-service-client-linux:
+    rm -rf external_clients/match_api
+    mkdir -p external_clients
+    docker run --rm \
+        -v ./external_clients:/external_clients:rw \
+        -v ../match_service/api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                match_api/v1/match.proto
+
+generate-match-service-client-windows:
+    Remove-Item -Recurse -Force .\external_clients\match_api -ErrorAction SilentlyContinue
+    mkdir -Force .\external_clients | Out-Null
+    docker run --rm \
+        -v .\external_clients:/external_clients:rw \
+        -v ..\match_service\api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                match_api/v1/match.proto
+
+generate-ranking-service-client:
+    (cd ../ranking_service && buf lint && buf format --write)
+    just generate-ranking-service-client-{{ os() }}
+
+alias generate-ranking-service-client-macos := generate-ranking-service-client-linux
+
+generate-ranking-service-client-linux:
+    rm -rf external_clients/ranking_api
+    mkdir -p external_clients
+    docker run --rm \
+        -v ./external_clients:/external_clients:rw \
+        -v ../ranking_service/api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                ranking_api/v1/ranking.proto
+
+generate-ranking-service-client-windows:
+    Remove-Item -Recurse -Force .\external_clients\ranking_api -ErrorAction SilentlyContinue
+    mkdir -Force .\external_clients | Out-Null
+    docker run --rm \
+        -v .\external_clients:/external_clients:rw \
+        -v ..\ranking_service\api:/api:ro \
+        -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
+        uv run --with 'protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2' \
+            protol --in-place --create-package --python-out external_clients \
+            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=/api --python_out=/external_clients --grpclib_python_out=/external_clients --mypy_out=/external_clients \
+                ranking_api/v1/ranking.proto
 
 lint:
     {{ manage }} ruff format .

@@ -43,7 +43,7 @@ async def handle_enter_name(message: Message, state: FSMContext) -> None:
 async def handle_enter_age(message: Message, state: FSMContext) -> None:
     try:
         age = int((message.text or "").strip())
-        if not (14 <= age <= 100):  # noqa: PLR2004
+        if not (14 <= age <= 100):
             raise ValueError
     except ValueError:
         await message.answer("Введи возраст числом (от 14 до 100):")
@@ -67,7 +67,7 @@ async def handle_enter_city(message: Message, state: FSMContext) -> None:
 @registration_router.message(StateFilter(RegistrationState.enter_bio))
 async def handle_enter_bio(message: Message, state: FSMContext) -> None:
     bio = (message.text or "").strip()
-    if not bio or len(bio) > 500:  # noqa: PLR2004
+    if not bio or len(bio) > 500:
         await message.answer("Расскажи о себе (до 500 символов):")
         return
     await state.update_data(bio=bio)

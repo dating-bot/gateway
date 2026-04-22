@@ -1,5 +1,4 @@
 import structlog
-
 from aiogram.types import CallbackQuery
 
 from gateway.app.telegram.handlers.stubs import _STUB_ANSWERS
@@ -20,12 +19,12 @@ async def handle_like(
     try:
         matched, match_id = await match_service.handle_like(liker_id, liked_id)
         if matched:
-            answer = f"❤️ It's a match! 🎉"
+            answer = "❤️ It's a match! 🎉"
             log.info("match created via callback", liker_id=liker_id, liked_id=liked_id, match_id=match_id)
         else:
             answer = _STUB_ANSWERS.get("handle_like", "❤️")
             log.debug("like processed", liker_id=liker_id, liked_id=liked_id)
-    except Exception as e:
+    except Exception:
         log.exception("handle_like failed", liker_id=liker_id, liked_id=liked_id)
         answer = "❌ Ошибка"
 
@@ -44,7 +43,7 @@ async def handle_skip(
         await match_service.handle_skip(actor_id, target_id)
         answer = _STUB_ANSWERS.get("handle_skip", "👎")
         log.debug("skip processed", actor_id=actor_id, target_id=target_id)
-    except Exception as e:
+    except Exception:
         log.exception("handle_skip failed", actor_id=actor_id, target_id=target_id)
         answer = "❌ Ошибка"
 

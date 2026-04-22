@@ -9,9 +9,9 @@ from redis.asyncio import Redis
 from gateway.app.telegram.fsm.edit_profile import edit_profile_router
 from gateway.app.telegram.fsm.registration import registration_router
 from gateway.app.telegram.handlers.callback_reply import callback_router
-from gateway.app.telegram.handlers.profile_photos import profile_photos_router
 from gateway.app.telegram.handlers.commands import commands_router
 from gateway.app.telegram.handlers.geo import geo_router
+from gateway.app.telegram.handlers.profile_photos import profile_photos_router
 from gateway.app.telegram.middleware import (
     CallbackRadixAclMiddleware,
     LockUserMiddleware,

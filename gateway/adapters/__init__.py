@@ -9,8 +9,8 @@ __all__ = [
     "GrpcProfileServiceAdapter",
     "MatchServiceAdapter",
     "ProfileAclAdapter",
-    "RankingServiceAdapter",
     "RadixCallbackRouterAdapter",
+    "RankingServiceAdapter",
     "ValkeyCacheAdapter",
     "ValkeyCoordinationAdapter",
 ]

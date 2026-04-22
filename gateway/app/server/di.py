@@ -31,7 +31,15 @@ from gateway.protocols import (
     MatchServiceProtocol,
     ProfileServiceProtocol,
 )
-from gateway.usecases import CreateProfile, DeletePhoto, GetProfile, ResolveCallbackRoute, SetGeo, UpdateProfile, UploadPhoto
+from gateway.usecases import (
+    CreateProfile,
+    DeletePhoto,
+    GetProfile,
+    ResolveCallbackRoute,
+    SetGeo,
+    UpdateProfile,
+    UploadPhoto,
+)
 
 
 @final
