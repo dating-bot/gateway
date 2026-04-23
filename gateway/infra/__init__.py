@@ -9,6 +9,7 @@ from gateway.infra.metrics import rate_limit_exceeded_total as rate_limit_exceed
 from gateway.infra.metrics import telegram_update_duration_seconds as telegram_update_duration_seconds
 from gateway.infra.profile_service import ProfileServiceConfig as ProfileServiceConfig
 from gateway.infra.profile_service import provide_profile_stub as provide_profile_stub
+from gateway.infra.rabbitmq import RabbitMQConfig as RabbitMQConfig
 from gateway.infra.ranking_service import RankingServiceConfig as RankingServiceConfig
 from gateway.infra.ranking_service import provide_ranking_stub as provide_ranking_stub
 from gateway.infra.telegram import TelegramConfig as TelegramConfig

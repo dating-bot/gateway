@@ -5,6 +5,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardBu
 from dishka.integrations.aiogram import FromDishka
 
 from gateway.app.telegram.fsm.states import RegistrationState
+from gateway.protocols.ranking_service import RankingServiceProtocol
 from gateway.usecases.profile.get_profile import GetProfile
 
 commands_router = Router(name="commands")
@@ -82,3 +83,43 @@ async def handle_cancel(message: Message, state: FSMContext) -> None:
         return
     await state.clear()
     _ = await message.answer("Действие отменено.")
+
+
+def _build_browse_kb(profile_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="❤️", callback_data=f"like:{profile_id}"),
+                InlineKeyboardButton(text="👎", callback_data=f"skip:{profile_id}"),
+                InlineKeyboardButton(text="⭐", callback_data=f"super_like:{profile_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="↩️", callback_data=f"undo:last"),
+            ],
+        ]
+    )
+
+
+@commands_router.message(Command("browse"))
+async def handle_browse(
+    message: Message,
+    get_profile: FromDishka[GetProfile],
+    ranking_service: FromDishka[RankingServiceProtocol],
+) -> None:
+    telegram_id = message.from_user.id if message.from_user else 0
+    profile = await get_profile.execute(telegram_id)
+
+    if profile is None:
+        _ = await message.answer("Сначала создай профиль через /start")
+        return
+
+    result = await ranking_service.get_next_candidate(telegram_id)
+    if result is None:
+        _ = await message.answer("Анкеты закончились 🔍 Попробуй позже!")
+        return
+
+    profile_id, queue_len = result
+    _ = await message.answer(
+        f"Кандидат #{profile_id}\nОсталось в очереди: {queue_len}",
+        reply_markup=_build_browse_kb(profile_id),
+    )

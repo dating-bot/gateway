@@ -30,14 +30,12 @@ def _photos_menu_keyboard(profile: Profile) -> InlineKeyboardMarkup:
     for p in profile.photos:
         if not p.is_active:
             continue
-        rows.append(
-            [
-                InlineKeyboardButton(
-                    text=f"🗑 Удалить ({p.photo_id})",
-                    callback_data=f"photos:del:{p.photo_id}",
-                )
-            ]
-        )
+        rows.append([
+            InlineKeyboardButton(
+                text=f"🗑 Удалить ({p.photo_id})",
+                callback_data=f"photos:del:{p.photo_id}",
+            )
+        ])
     rows.append([InlineKeyboardButton(text="➕ Добавить фото", callback_data="photos:add")])
     rows.append([InlineKeyboardButton(text="◀️ Назад к полям", callback_data="menu:profile:edit")])
     return InlineKeyboardMarkup(inline_keyboard=rows)

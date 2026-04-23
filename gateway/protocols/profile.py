@@ -37,3 +37,13 @@ class ProfileServiceProtocol(Protocol):
     async def delete_photo(self, telegram_id: int, photo_id: int) -> None: ...
 
     async def get_presigned_url(self, photo_id: int) -> str: ...
+
+    @dataclass
+    class SetPreferencesRequest:
+        telegram_id: int
+        gender_pref: Gender
+        age_min: int
+        age_max: int
+        max_distance_km: int
+
+    async def set_preferences(self, request: "ProfileServiceProtocol.SetPreferencesRequest") -> None: ...

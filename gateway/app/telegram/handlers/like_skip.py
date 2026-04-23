@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 
 from gateway.app.telegram.handlers.stubs import _STUB_ANSWERS
 from gateway.domain.resolved_callback import ResolvedCallback
+from gateway.protocols.cache import CacheProtocol
 from gateway.protocols.match_service import MatchServiceProtocol
 
 log = structlog.stdlib.get_logger("gateway.handlers.like_skip")
@@ -45,6 +46,29 @@ async def handle_skip(
         log.debug("skip processed", actor_id=actor_id, target_id=target_id)
     except Exception:
         log.exception("handle_skip failed", actor_id=actor_id, target_id=target_id)
+        answer = "❌ Ошибка"
+
+    _ = await query.answer(answer)
+
+
+async def handle_undo(
+    query: CallbackQuery,
+    resolved: ResolvedCallback,
+    cache: CacheProtocol,
+) -> None:
+    user_id = query.from_user.id
+    key = f"last_skip:{user_id}"
+
+    try:
+        last_skipped = await cache.get(key, unmarshal_as=int)
+        if last_skipped is None:
+            answer = "Время вышло (30 мин) 🔄"
+        else:
+            await cache.delete(key)
+            answer = f"Вернулись к профилю #{last_skipped}"
+            log.info("undo successful", user_id=user_id, restored_profile_id=last_skipped)
+    except Exception:
+        log.exception("handle_undo failed", user_id=user_id)
         answer = "❌ Ошибка"
 
     _ = await query.answer(answer)

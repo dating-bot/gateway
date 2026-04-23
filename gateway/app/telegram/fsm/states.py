@@ -27,3 +27,12 @@ class PhotoManageState(StatesGroup):
     """Добавление фото из меню редактирования."""
 
     waiting_photo = State()
+
+
+class PreferencesState(StatesGroup):
+    """Настройки предпочтений: gender_pref → age_min → age_max → max_distance."""
+
+    enter_gender_pref = State()
+    enter_age_min = State()
+    enter_age_max = State()
+    enter_max_distance = State()

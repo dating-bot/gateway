@@ -10,13 +10,16 @@ from gateway.adapters import (
     MatchServiceAdapter,
     ProfileAclAdapter,
     RadixCallbackRouterAdapter,
+    RankingServiceAdapter,
     ValkeyCacheAdapter,
     ValkeyCoordinationAdapter,
 )
+from gateway.adapters.events.rabbitmq import RabbitMQPublisherAdapter
 from gateway.app.server import grpc_handler
 from gateway.infra import (
     CallbackRoutingConfig,
     GlobalConfig,
+    RabbitMQConfig,
     provide_glide_client,
     provide_match_stub,
     provide_profile_stub,
@@ -28,8 +31,10 @@ from gateway.protocols import (
     CacheProtocol,
     CallbackRouterProtocol,
     CoordinationProtocol,
+    EventPublisherProtocol,
     MatchServiceProtocol,
     ProfileServiceProtocol,
+    RankingServiceProtocol,
 )
 from gateway.usecases import (
     CreateProfile,
@@ -98,6 +103,12 @@ class AdapterProvider(dishka.Provider):
         provides=RankingServiceProtocol,
     )
     """адаптер ranking-service через gRPC"""
+
+    event_publisher = dishka.provide(
+        source=RabbitMQPublisherAdapter,
+        provides=EventPublisherProtocol,
+    )
+    """адаптер RabbitMQ publisher"""
 
     acl_adapter = dishka.provide(
         source=ProfileAclAdapter,

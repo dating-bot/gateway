@@ -8,6 +8,7 @@ from gateway.infra.grpc import GrpcServerConfig
 from gateway.infra.http import HttpServerConfig
 from gateway.infra.match_service import MatchServiceConfig
 from gateway.infra.profile_service import ProfileServiceConfig
+from gateway.infra.rabbitmq import RabbitMQConfig
 from gateway.infra.ranking_service import RankingServiceConfig
 from gateway.infra.telegram import TelegramConfig
 from gateway.infra.valkey import ValkeyConfig
@@ -22,6 +23,7 @@ class GlobalConfig(BaseSettings):
     profile_service: ProfileServiceConfig
     match_service: MatchServiceConfig
     ranking_service: RankingServiceConfig
+    rabbitmq: RabbitMQConfig
     callback_routing: CallbackRoutingConfig
 
     @classmethod

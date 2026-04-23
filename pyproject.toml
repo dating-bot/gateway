@@ -18,6 +18,8 @@ dependencies = [
     "valkey-glide>=2.2.3; sys_platform != 'win32'",
     "prometheus-client>=0.24.1",
     "redis>=7.4.0",
+    "aio-pika>=9.6.1",
+    "pamqp>=3.3.0",
 ]
 
 [dependency-groups]
