@@ -30,19 +30,19 @@ user_lock_ttl_sec = 5
 profile_cache_ttl_sec = 300
 
 [profile_service]
-# gRPC profile-service (см. ProfileServiceConfig: host + port, не URL)
+# gRPC profile-service (см. ProfileServiceConfig: host + port, не URL). В Docker: profile_server:50051
 host = "localhost"
-port = 50052
+port = 50051
 
 [match_service]
-# gRPC match-service
+# gRPC match-service. Docker: host `match_server` (compose service name); optional alias `match_service`
 host = "localhost"
-port = 50052
+port = 50051
 
 [ranking_service]
-# gRPC ranking-service
+# gRPC ranking-service. Docker: host `ranking_server`; optional alias `ranking_service`
 host = "localhost"
-port = 50053
+port = 50051
 
 [callback_routing]
 # Путь относительно рабочей директории процесса (в Docker: WORKDIR /app → файл /app/routes.yaml)

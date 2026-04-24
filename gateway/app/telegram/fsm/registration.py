@@ -11,6 +11,7 @@ from dishka.integrations.aiogram import FromDishka
 
 from gateway.app.telegram.fsm.states import PhotoPromptState, RegistrationState
 from gateway.domain.profile import Gender
+from gateway.protocols.profile import ProfileServiceProtocol
 from gateway.usecases.profile.create_profile import CreateProfile
 from gateway.usecases.profile.upload_photo import UploadPhoto
 
@@ -25,6 +26,21 @@ _GENDER_KB = ReplyKeyboardMarkup(
 _GENDER_TEXT_MAP: dict[str, Gender] = {
     "мужчина": Gender.MALE,
     "женщина": Gender.FEMALE,
+}
+
+_GENDER_PREF_KB = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Мужчины"), KeyboardButton(text="Женщины")],
+        [KeyboardButton(text="Все")],
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)
+
+_GENDER_PREF_TEXT_MAP: dict[str, Gender] = {
+    "мужчины": Gender.MALE,
+    "женщины": Gender.FEMALE,
+    "все": Gender.ANY,
 }
 
 
@@ -102,9 +118,42 @@ async def handle_enter_gender(
         )
     )
 
+    await state.set_state(RegistrationState.enter_gender_pref)
+    await message.answer(
+        "Профиль создан. Кого хочешь видеть в ленте?",
+        reply_markup=_GENDER_PREF_KB,
+    )
+
+
+@registration_router.message(StateFilter(RegistrationState.enter_gender_pref))
+async def handle_enter_gender_pref(
+    message: Message,
+    state: FSMContext,
+    profile_service: FromDishka[ProfileServiceProtocol],
+) -> None:
+    text = (message.text or "").strip().lower()
+    gender_pref = _GENDER_PREF_TEXT_MAP.get(text)
+    if gender_pref is None:
+        await message.answer("Выбери вариант из кнопок ниже:", reply_markup=_GENDER_PREF_KB)
+        return
+
+    data = await state.get_data()
+    telegram_id = message.from_user.id if message.from_user else 0
+    age = int(data["age"])
+
+    await profile_service.set_preferences(
+        ProfileServiceProtocol.SetPreferencesRequest(
+            telegram_id=telegram_id,
+            gender_pref=gender_pref,
+            age_min=max(18, age - 5),
+            age_max=min(100, age + 5),
+            max_distance_km=50,
+        )
+    )
+
     await state.set_state(PhotoPromptState.waiting_photo)
     await message.answer(
-        "Профиль создан! 🎉\n\nТеперь загрузи фото (или отправь /skip чтобы пропустить):",
+        "Отлично. Теперь загрузи фото (или отправь /skip чтобы пропустить):",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -135,10 +184,10 @@ async def handle_photo_upload(
     await upload_photo.execute(telegram_id=telegram_id, data=data)
 
     await state.clear()
-    await message.answer("Фото загружено! Профиль готов ✅\n\nИспользуй /menu для навигации.")
+    await message.answer("Фото загружено! Профиль готов ✅\n\nИспользуй кнопку Menu (или /menu) для навигации.")
 
 
 @registration_router.message(StateFilter(PhotoPromptState.waiting_photo), F.text == "/skip")
 async def handle_photo_skip(message: Message, state: FSMContext) -> None:
     await state.clear()
-    await message.answer("Профиль создан без фото ✅\n\nИспользуй /menu для навигации.")
+    await message.answer("Профиль создан без фото ✅\n\nИспользуй кнопку Menu (или /menu) для навигации.")

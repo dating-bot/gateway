@@ -3,6 +3,7 @@ from enum import StrEnum
 
 
 class Gender(StrEnum):
+    ANY = "any"
     UNSPECIFIED = "unspecified"
     MALE = "male"
     FEMALE = "female"

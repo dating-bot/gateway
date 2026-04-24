@@ -1,5 +1,4 @@
-from typing import Protocol
-from typing import final
+from typing import Protocol, final
 
 
 @final

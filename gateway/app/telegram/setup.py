@@ -2,6 +2,7 @@
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import BotCommand, MenuButtonCommands
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import setup_dishka
 from redis.asyncio import Redis
@@ -26,6 +27,18 @@ from gateway.usecases.callback_routing.resolve import ResolveCallbackRoute
 def create_bot(token: str) -> Bot:
     """Создать aiogram Bot."""
     return Bot(token=token)
+
+
+async def configure_bot_menu(bot: Bot) -> None:
+    """Настроить постоянную кнопку Menu и список команд бота."""
+    commands = [
+        BotCommand(command="menu", description="Главное меню"),
+        BotCommand(command="start", description="Запустить бота"),
+        BotCommand(command="browse", description="Смотреть анкеты"),
+        BotCommand(command="cancel", description="Отменить текущее действие"),
+    ]
+    _ = await bot.set_my_commands(commands=commands)
+    _ = await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
 
 
 def create_fsm_storage(config: ValkeyConfig) -> RedisStorage:

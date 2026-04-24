@@ -6,7 +6,8 @@ services:
     container_name: gateway-server
     restart: unless-stopped
     volumes:
-      - ./config.toml:/app/config.toml
+      # Use docker-specific upstream hosts/ports (same as local repo defaults after fix; avoids drift from dev config.toml).
+      - ./config.docker.toml:/app/config.toml:ro
     networks:
       - dating_bot_net
     command: ["uv", "-q", "run", "python3", "-m", "gateway"]

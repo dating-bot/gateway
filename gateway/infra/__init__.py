@@ -10,6 +10,7 @@ from gateway.infra.metrics import telegram_update_duration_seconds as telegram_u
 from gateway.infra.profile_service import ProfileServiceConfig as ProfileServiceConfig
 from gateway.infra.profile_service import provide_profile_stub as provide_profile_stub
 from gateway.infra.rabbitmq import RabbitMQConfig as RabbitMQConfig
+from gateway.infra.rabbitmq import provide_rabbitmq_connection as provide_rabbitmq_connection
 from gateway.infra.ranking_service import RankingServiceConfig as RankingServiceConfig
 from gateway.infra.ranking_service import provide_ranking_stub as provide_ranking_stub
 from gateway.infra.telegram import TelegramConfig as TelegramConfig
@@ -23,12 +24,14 @@ __all__ = [
     "HttpServerConfig",
     "MatchServiceConfig",
     "ProfileServiceConfig",
+    "RabbitMQConfig",
     "RankingServiceConfig",
     "TelegramConfig",
     "ValkeyConfig",
     "provide_glide_client",
     "provide_match_stub",
     "provide_profile_stub",
+    "provide_rabbitmq_connection",
     "provide_ranking_stub",
     "radix_tree_unmatched_total",
     "rate_limit_exceeded_total",

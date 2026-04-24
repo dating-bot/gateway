@@ -15,11 +15,10 @@ from gateway.adapters import (
     ValkeyCoordinationAdapter,
 )
 from gateway.adapters.events.rabbitmq import RabbitMQPublisherAdapter
-from gateway.app.server import grpc_handler
+from gateway.app.server import grpc_handler, grpc_inbound_proxies
 from gateway.infra import (
     CallbackRoutingConfig,
     GlobalConfig,
-    RabbitMQConfig,
     provide_glide_client,
     provide_match_stub,
     provide_profile_stub,
@@ -37,6 +36,7 @@ from gateway.protocols import (
     RankingServiceProtocol,
 )
 from gateway.usecases import (
+    CheckDatingStatus,
     CreateProfile,
     DeletePhoto,
     GetProfile,
@@ -143,6 +143,9 @@ class UsecaseProvider(dishka.Provider):
     set_geo = dishka.provide(SetGeo)
     """use case обновления геолокации"""
 
+    check_dating_status = dishka.provide(CheckDatingStatus)
+    """диагностика: очередь ранкинга + мэтчи (без lpop)"""
+
     upload_photo = dishka.provide(UploadPhoto)
     """use case загрузки фото"""
 
@@ -155,7 +158,16 @@ class AppProvider(dishka.Provider):
     scope = dishka.Scope.APP
 
     grpc_service_handler = dishka.provide(grpc_handler.GatewayServiceHandler)
-    """gRPC-обработчик GatewayService"""
+    """gRPC-обработчик GatewayService (Ping)"""
+
+    profile_grpc_inbound = dishka.provide(grpc_inbound_proxies.ProfileGrpcInboundProxy)
+    """gRPC-прокси profile_api.v1.ProfileService → profile-service"""
+
+    ranking_grpc_inbound = dishka.provide(grpc_inbound_proxies.RankingGrpcInboundProxy)
+    """gRPC-прокси ranking_api.v1.RankingService → ranking-service"""
+
+    match_grpc_inbound = dishka.provide(grpc_inbound_proxies.MatchGrpcInboundProxy)
+    """gRPC-прокси match_api.v1.MatchService → match-service"""
 
 
 container = dishka.make_async_container(

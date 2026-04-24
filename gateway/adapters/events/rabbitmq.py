@@ -1,4 +1,4 @@
-from typing import final, override
+from typing import final
 
 import aio_pika
 import structlog
@@ -27,9 +27,11 @@ class RabbitMQPublisherAdapter(EventPublisherProtocol):
 
         message = aio_pika.Message(
             body=body,
-            delivery_mode=aio_pika.DeliveryMode.PERSISTENT if delivery_mode == 2 else aio_pika.DeliveryMode.NOT_PERSISTENT,
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+            if delivery_mode == 2
+            else aio_pika.DeliveryMode.NOT_PERSISTENT,
         )
-        await self._channel.default_exchange.publish(message, routing_key=routing_key)
+        _ = await self._channel.default_exchange.publish(message, routing_key=routing_key)
         log.debug("message published", routing_key=routing_key, size=len(body))
 
     async def close(self) -> None:

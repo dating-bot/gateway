@@ -23,6 +23,28 @@ menu:profile:view:
   handler: handle_profile_view
   requires: {}
 
+menu:browse:
+  handler: handle_menu_browse
+  requires:
+    active: true
+
+menu:more:
+  handler: handle_menu_more
+  requires: {}
+
+menu:main:
+  handler: handle_menu_main
+  requires: {}
+
+menu:geo:request:
+  handler: handle_menu_geo_request
+  requires: {}
+
+menu:dating:status:
+  handler: handle_menu_dating_status
+  requires:
+    active: true
+
 menu:profile:edit:
   handler: handle_profile_edit
   requires:

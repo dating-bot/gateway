@@ -13,7 +13,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from dishka.integrations.aiogram import FromDishka
 
-from gateway.app.telegram.handlers.like_skip import handle_like, handle_skip
+from gateway.app.telegram.handlers.commands import (
+    handle_menu_browse,
+    handle_menu_dating_status,
+    handle_menu_geo_request,
+    handle_menu_main,
+    handle_menu_more,
+)
+from gateway.app.telegram.handlers.like_skip import handle_like, handle_skip, handle_undo
 from gateway.app.telegram.handlers.profile_photos import (
     handle_photos_add,
     handle_photos_delete,
@@ -27,8 +34,11 @@ from gateway.app.telegram.handlers.profile_view import (
 from gateway.app.telegram.handlers.stubs import handle_stub
 from gateway.app.telegram.middleware.callback_dispatch import RESOLVED_CALLBACK_KEY
 from gateway.domain.resolved_callback import ResolvedCallback
-from gateway.protocols.match_service import MatchServiceProtocol
+from gateway.protocols.cache import CacheProtocol
+from gateway.protocols.events import EventPublisherProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
+from gateway.protocols.ranking_service import RankingServiceProtocol
+from gateway.usecases.dating.check_status import CheckDatingStatus
 from gateway.usecases.profile.delete_photo import DeletePhoto
 from gateway.usecases.profile.get_profile import GetProfile
 
@@ -59,12 +69,15 @@ _STUB_HANDLERS = {
 
 
 @callback_router.callback_query()
-async def dispatch_callback(  # noqa: PLR0913
+async def dispatch_callback(  # noqa: C901, PLR0912, PLR0913
     query: CallbackQuery,
     get_profile: FromDishka[GetProfile],
     delete_photo: FromDishka[DeletePhoto],
     profile_service: FromDishka[ProfileServiceProtocol],
-    match_service: FromDishka[MatchServiceProtocol],
+    event_publisher: FromDishka[EventPublisherProtocol],
+    ranking_service: FromDishka[RankingServiceProtocol],
+    check_dating_status: FromDishka[CheckDatingStatus],
+    cache: FromDishka[CacheProtocol],
     state: FSMContext,
     resolved_callback: ResolvedCallback | None = None,
     **data: Any,
@@ -79,6 +92,16 @@ async def dispatch_callback(  # noqa: PLR0913
 
     if handler_id == "handle_profile_view":
         await handle_profile_view(query, resolved, get_profile, profile_service)
+    elif handler_id == "handle_menu_browse":
+        await handle_menu_browse(query, resolved, get_profile, profile_service, ranking_service)
+    elif handler_id == "handle_menu_dating_status":
+        await handle_menu_dating_status(query, resolved, get_profile, check_dating_status)
+    elif handler_id == "handle_menu_more":
+        await handle_menu_more(query, resolved, get_profile)
+    elif handler_id == "handle_menu_main":
+        await handle_menu_main(query, resolved, get_profile)
+    elif handler_id == "handle_menu_geo_request":
+        await handle_menu_geo_request(query, resolved, get_profile)
     elif handler_id == "handle_profile_edit":
         await handle_profile_edit(query, resolved, get_profile)
     elif handler_id == "handle_profile_photos_menu":
@@ -90,9 +113,11 @@ async def dispatch_callback(  # noqa: PLR0913
     elif handler_id == "handle_edit_field_select":
         await handle_edit_field_select(query, resolved, state, get_profile)
     elif handler_id == "handle_like":
-        await handle_like(query, resolved, match_service)
+        await handle_like(query, resolved, event_publisher, cache, get_profile, profile_service, ranking_service)
     elif handler_id == "handle_skip":
-        await handle_skip(query, resolved, match_service)
+        await handle_skip(query, resolved, event_publisher, cache, get_profile, profile_service, ranking_service)
+    elif handler_id == "handle_undo":
+        await handle_undo(query, resolved, cache, profile_service)
     elif handler_id in _STUB_HANDLERS:
         await handle_stub(query, resolved)
     else:

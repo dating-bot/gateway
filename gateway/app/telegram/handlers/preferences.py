@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from gateway.app.telegram.fsm.states import PreferencesState
-from gateway.domain.profile import Gender, Profile
+from gateway.domain.profile import Gender
 from gateway.protocols.profile import ProfileServiceProtocol
 
 log = structlog.stdlib.get_logger("gateway.handlers.preferences")
@@ -36,7 +36,7 @@ async def handle_gender_pref(
 ) -> None:
     gender_map = {"m": Gender.MALE, "f": Gender.FEMALE, "any": Gender.ANY}
     gender = gender_map.get(message.text.split(":")[1], Gender.ANY)
-    await state.update_data(gender_pref=gender.value)
+    _ = await state.update_data(gender_pref=gender.value)
 
     await state.set_state(PreferencesState.enter_age_min)
     _ = await message.answer("Минимальный возраст?")
@@ -49,7 +49,7 @@ async def handle_age_min(
     try:
         age = int(message.text)
         if 18 <= age <= 100:
-            await state.update_data(age_min=age)
+            _ = await state.update_data(age_min=age)
     except ValueError:
         pass
 
@@ -64,7 +64,7 @@ async def handle_age_max(
     try:
         age = int(message.text)
         if 18 <= age <= 100:
-           _ = await state.update_data(age_max=age)
+            _ = await state.update_data(age_max=age)
     except ValueError:
         pass
 
@@ -96,9 +96,10 @@ async def handle_max_distance(
                 gender_pref=Gender(data.get("gender_pref", "any")),
                 age_min=int(data.get("age_min", 18)),
                 age_max=int(data.get("age_max", 50)),
-                max_distance_km=int(data.get("max_distance_km", 50))),
-            )
+                max_distance_km=int(data.get("max_distance_km", 50)),
+            ),
         )
+
         answer = "✅ Настройки сохранены!"
     except Exception:
         log.exception("save preferences failed", user_id=user_id)

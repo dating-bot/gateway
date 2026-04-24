@@ -56,7 +56,15 @@ skip-excluded-dirs = true
 
 [tool.hatch.build.targets.wheel]
 only-packages = true
-packages = ["gateway"]
+# Install generated / shared proto packages for Docker/CI; same paths as in dev (import profile_api, …).
+packages = [
+    "gateway",
+    "gateway_api",
+    "match_api",
+    "profile_api",
+    "ranking_api",
+    "external_clients",
+]
 
 [tool.hatch.version]
 path = "gateway/__version__.py"

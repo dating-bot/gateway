@@ -29,7 +29,7 @@ class ValkeyCoordinationAdapter(CoordinationProtocol):
         """INCR + EXPIRE если счётчик новый. Возвращает новое значение."""
         count = await self._client.incr(key)
         if count == 1:
-            await self._client.expire(key, expire_sec)
+            _ = await self._client.expire(key, expire_sec)
         return count
 
     @override
@@ -48,4 +48,4 @@ class ValkeyCoordinationAdapter(CoordinationProtocol):
 
     @override
     async def delete(self, key: str) -> None:
-        await self._client.delete([key])
+        _ = await self._client.delete([key])

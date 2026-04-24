@@ -9,6 +9,7 @@ class RegistrationState(StatesGroup):
     enter_city = State()
     enter_bio = State()
     enter_gender = State()
+    enter_gender_pref = State()
 
 
 class EditProfileState(StatesGroup):

@@ -19,8 +19,15 @@ generate-gateway-api-linux:
     docker run --rm -v ./gateway_api:/gateway_api:rw -v ./api:/api:ro -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
         uv run --with protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2 \
             protol --in-place --create-package --python-out gateway_api \
-            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=api --python_out=. --grpclib_python_out=. --mypy_out=. \
-                gateway_api/v1/gateway.proto
+            protoc --protoc-path="python3 -m grpc_tools.protoc" \
+            -p /api \
+            --python_out=/gateway_api --grpclib_python_out=/gateway_api --mypy_out=/gateway_api \
+            gateway_api/v1/gateway.proto
+    if [ -d gateway_api/gateway_api/v1 ]; then \
+        rm -rf gateway_api/v1; \
+        mv gateway_api/gateway_api/v1 gateway_api/v1; \
+        rm -rf gateway_api/gateway_api; \
+    fi
 
 generate-gateway-api-windows:
     Remove-Item -Recurse -Force .\\gateway_api
@@ -28,8 +35,11 @@ generate-gateway-api-windows:
     docker run --rm -v .\\gateway_api:/gateway_api:rw -v .\\api:/api:ro -w / ghcr.io/astral-sh/uv:python3.13-bookworm-slim \
         uv run --with protoletariat==3.3.10,grpclib[protobuf]==0.4.9,mypy-protobuf==3.7.0,grpcio_tools==1.71.2 \
             protol --in-place --create-package --python-out gateway_api \
-            protoc --protoc-path="python3 -m grpc_tools.protoc" --proto-path=api --python_out=. --grpclib_python_out=. --mypy_out=. \
-                gateway_api/v1/gateway.proto
+            protoc --protoc-path="python3 -m grpc_tools.protoc" \
+            -p /api \
+            --python_out=/gateway_api --grpclib_python_out=/gateway_api --mypy_out=/gateway_api \
+            gateway_api/v1/gateway.proto
+    powershell -NoProfile -Command "if (Test-Path 'gateway_api/gateway_api/v1') { Remove-Item -Recurse -Force -ErrorAction SilentlyContinue 'gateway_api/v1'; Move-Item 'gateway_api/gateway_api/v1' 'gateway_api/v1'; Remove-Item -Recurse -Force 'gateway_api/gateway_api' }"
 
 # Клиент profile-service: proto из ../profile_service/api, вывод в external_clients (как в pechkin — Docker + protol + protoc)
 generate-profile-service-client:

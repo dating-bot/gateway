@@ -16,5 +16,6 @@ class GatewayServiceHandler(GatewayServiceBase):
     @override
     @unary
     async def Ping(self, request: gateway_pb2.PingRequest) -> gateway_pb2.PingResponse:
+        del request
         log.info("ping")
         return gateway_pb2.PingResponse(message="pong")
