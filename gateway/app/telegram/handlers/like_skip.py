@@ -19,6 +19,7 @@ INTERACTION_LIKE_QUEUE = "interaction.like"
 INTERACTION_SKIP_QUEUE = "interaction.skip"
 RANKING_INTERACTION_LIKE_QUEUE = "ranking.interaction.like"
 RANKING_INTERACTION_SKIP_QUEUE = "ranking.interaction.skip"
+RANKING_INTERACTION_UNDO_SKIP_QUEUE = "ranking.interaction.undo_skip"
 UNDO_TTL = timedelta(minutes=30)
 SEEN_TTL = timedelta(days=30)
 
@@ -141,6 +142,7 @@ async def handle_skip(  # noqa: PLR0913
 async def handle_undo(
     query: CallbackQuery,
     resolved: ResolvedCallback,
+    events: EventPublisherProtocol,
     cache: CacheProtocol,
     profile_service: ProfileServiceProtocol,
 ) -> None:
@@ -162,6 +164,21 @@ async def handle_undo(
         else:
             await cache.delete(key)
             await cache.delete(action_key)
+            await cache.delete(f"seen:{user_id}:{last_skipped_telegram_id}")
+            try:
+                await events.publish(
+                    RANKING_INTERACTION_UNDO_SKIP_QUEUE,
+                    json.dumps({
+                        "actor_telegram_id": user_id,
+                        "target_telegram_id": last_skipped_telegram_id,
+                    }).encode(),
+                )
+            except Exception:
+                log.exception(
+                    "ranking undo skip event publish failed",
+                    user_id=user_id,
+                    restored_telegram_id=last_skipped_telegram_id,
+                )
             candidate = await profile_service.get_profile(last_skipped_telegram_id)
             if candidate is None:
                 answer = f"Профиль #{last_skipped_telegram_id} уже недоступен"

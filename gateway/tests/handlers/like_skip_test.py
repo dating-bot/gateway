@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 import pytest
 
@@ -66,10 +66,11 @@ async def test_handle_skip_publishes_interaction_event() -> None:
 async def test_handle_undo_restores_last_skipped_profile() -> None:
     query = _query_with_user(505)
     resolved = ResolvedCallback(handler_id="handle_undo", path_params={})
+    publisher = AsyncMock()
     cache = AsyncMock()
-    cache.get.return_value = 606
+    cache.get.side_effect = ["skip", 606]
     profile_service = AsyncMock()
-    profile_service.get_profile_by_id.return_value = SimpleNamespace(
+    profile_service.get_profile.return_value = SimpleNamespace(
         profile_id=606,
         telegram_id=606,
         name="Restored User",
@@ -80,9 +81,13 @@ async def test_handle_undo_restores_last_skipped_profile() -> None:
         photos=[],
     )
 
-    await handle_undo(query, resolved, cache, profile_service)
+    await handle_undo(query, resolved, publisher, cache, profile_service)
 
-    cache.delete.assert_awaited_once_with("last_skip:505")
-    profile_service.get_profile_by_id.assert_awaited_once_with(606)
+    assert cache.delete.await_args_list == [call("last_skip:505"), call("last_action:505"), call("seen:505:606")]
+    publisher.publish.assert_awaited_once_with(
+        "ranking.interaction.undo_skip",
+        b'{"actor_telegram_id": 505, "target_telegram_id": 606}',
+    )
+    profile_service.get_profile.assert_awaited_once_with(606)
     query.answer.assert_awaited_once_with("Анкета возвращена")
     query.bot.send_message.assert_awaited_once()

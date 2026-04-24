@@ -117,7 +117,7 @@ async def dispatch_callback(  # noqa: C901, PLR0912, PLR0913
     elif handler_id == "handle_skip":
         await handle_skip(query, resolved, event_publisher, cache, get_profile, profile_service, ranking_service)
     elif handler_id == "handle_undo":
-        await handle_undo(query, resolved, cache, profile_service)
+        await handle_undo(query, resolved, event_publisher, cache, profile_service)
     elif handler_id in _STUB_HANDLERS:
         await handle_stub(query, resolved)
     else:
