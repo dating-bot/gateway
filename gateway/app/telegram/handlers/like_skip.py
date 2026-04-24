@@ -20,6 +20,7 @@ INTERACTION_SKIP_QUEUE = "interaction.skip"
 RANKING_INTERACTION_LIKE_QUEUE = "ranking.interaction.like"
 RANKING_INTERACTION_SKIP_QUEUE = "ranking.interaction.skip"
 UNDO_TTL = timedelta(minutes=30)
+SEEN_TTL = timedelta(days=30)
 
 
 async def handle_like(  # noqa: PLR0913
@@ -68,6 +69,7 @@ async def handle_like(  # noqa: PLR0913
 
     await cache.set(f"last_action:{liker_id}", "like", ttl=UNDO_TTL)
     await cache.delete(f"last_skip:{liker_id}")
+    await cache.set(f"seen:{liker_id}:{liked_id}", 1, ttl=SEEN_TTL)
 
     await _send_next_candidate(
         telegram_id=liker_id,
@@ -75,6 +77,7 @@ async def handle_like(  # noqa: PLR0913
         get_profile=get_profile,
         profile_service=profile_service,
         ranking_service=ranking_service,
+        cache=cache,
         exclude_candidate_ids={liked_id},
     )
 
@@ -119,6 +122,7 @@ async def handle_skip(  # noqa: PLR0913
 
     await cache.set(f"last_skip:{actor_id}", target_id, ttl=UNDO_TTL)
     await cache.set(f"last_action:{actor_id}", "skip", ttl=UNDO_TTL)
+    await cache.set(f"seen:{actor_id}:{target_id}", 1, ttl=SEEN_TTL)
     _ = await query.answer(answer)
     if query.message is None:
         log.warning("skip callback has no message", actor_id=actor_id, target_id=target_id)
@@ -130,6 +134,7 @@ async def handle_skip(  # noqa: PLR0913
         get_profile=get_profile,
         profile_service=profile_service,
         ranking_service=ranking_service,
+        cache=cache,
     )
 
 

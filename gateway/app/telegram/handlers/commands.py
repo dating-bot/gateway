@@ -20,6 +20,7 @@ from gateway.app.telegram.handlers.profile_view import (
     _send_profile_photos_to_chat,
 )
 from gateway.domain.resolved_callback import ResolvedCallback
+from gateway.protocols.cache import CacheProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
 from gateway.protocols.ranking_service import RankingServiceProtocol
 from gateway.usecases.dating.check_status import CheckDatingStatus
@@ -180,6 +181,7 @@ async def _send_next_candidate(  # noqa: PLR0913
     get_profile: FromDishka[GetProfile],
     profile_service: FromDishka[ProfileServiceProtocol],
     ranking_service: FromDishka[RankingServiceProtocol],
+    cache: FromDishka[CacheProtocol] | None = None,
     exclude_candidate_ids: set[int] | None = None,
 ) -> int | None:
     profile = await get_profile.execute(telegram_id)
@@ -188,7 +190,7 @@ async def _send_next_candidate(  # noqa: PLR0913
         _ = await message.answer("Сначала создай профиль через /start")
         return None
 
-    max_attempts = 3
+    max_attempts = 10
     result: tuple[int, int] | None = None
     for _ in range(max_attempts):
         result = await ranking_service.get_next_candidate(telegram_id)
@@ -202,6 +204,16 @@ async def _send_next_candidate(  # noqa: PLR0913
                 candidate_telegram_id=candidate_telegram_id,
             )
             continue
+        if cache is not None:
+            seen_key = f"seen:{telegram_id}:{candidate_telegram_id}"
+            already_seen = await cache.get(seen_key, unmarshal_as=int)
+            if already_seen is not None:
+                log.info(
+                    "recently seen candidate returned, retrying next",
+                    telegram_id=telegram_id,
+                    candidate_telegram_id=candidate_telegram_id,
+                )
+                continue
         break
 
     if result is None:
@@ -241,6 +253,7 @@ async def handle_browse(
     get_profile: FromDishka[GetProfile],
     profile_service: FromDishka[ProfileServiceProtocol],
     ranking_service: FromDishka[RankingServiceProtocol],
+    cache: FromDishka[CacheProtocol],
 ) -> None:
     telegram_id = message.from_user.id if message.from_user else 0
     await _send_next_candidate(
@@ -249,6 +262,7 @@ async def handle_browse(
         get_profile=get_profile,
         profile_service=profile_service,
         ranking_service=ranking_service,
+        cache=cache,
     )
 
 
@@ -258,6 +272,7 @@ async def handle_menu_browse(
     get_profile: FromDishka[GetProfile],
     profile_service: FromDishka[ProfileServiceProtocol],
     ranking_service: FromDishka[RankingServiceProtocol],
+    cache: FromDishka[CacheProtocol],
 ) -> None:
     del resolved
 
@@ -271,6 +286,7 @@ async def handle_menu_browse(
         get_profile=get_profile,
         profile_service=profile_service,
         ranking_service=ranking_service,
+        cache=cache,
     )
     _ = await query.answer()
 

@@ -93,7 +93,7 @@ async def dispatch_callback(  # noqa: C901, PLR0912, PLR0913
     if handler_id == "handle_profile_view":
         await handle_profile_view(query, resolved, get_profile, profile_service)
     elif handler_id == "handle_menu_browse":
-        await handle_menu_browse(query, resolved, get_profile, profile_service, ranking_service)
+        await handle_menu_browse(query, resolved, get_profile, profile_service, ranking_service, cache)
     elif handler_id == "handle_menu_dating_status":
         await handle_menu_dating_status(query, resolved, get_profile, check_dating_status)
     elif handler_id == "handle_menu_more":
