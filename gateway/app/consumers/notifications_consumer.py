@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from typing import final
 
 import aio_pika
@@ -18,6 +19,7 @@ LIKE_RECEIVED_QUEUE = "gateway.like.received"
 LIKE_RECEIVED_ROUTING_KEY = "like.received"
 MATCH_CREATED_QUEUE = "gateway.match.created"
 MATCH_CREATED_ROUTING_KEY = "match.created"
+RECENT_MATCH_TTL_SECONDS = 180
 
 
 @final
@@ -32,13 +34,14 @@ class NotificationsConsumer:
         self._connection = connection
         self._bot = bot
         self._profile_service = profile_service
+        self._recent_matches: dict[tuple[int, int], float] = {}
         self._channel: aio_pika.abc.AbstractChannel | None = None
 
     async def run(self) -> None:
         """Запускает консьюмер для уведомлений."""
         channel = await self._connection.channel()
         self._channel = channel
-        await channel.set_qos(prefetch_count=10)
+        _ = await channel.set_qos(prefetch_count=10)
 
         exchange = await channel.declare_exchange(
             MATCH_EVENTS_EXCHANGE,
@@ -47,10 +50,10 @@ class NotificationsConsumer:
         )
 
         like_queue = await channel.declare_queue(LIKE_RECEIVED_QUEUE, durable=True)
-        await like_queue.bind(exchange, routing_key=LIKE_RECEIVED_ROUTING_KEY)
+        _ = await like_queue.bind(exchange, routing_key=LIKE_RECEIVED_ROUTING_KEY)
 
         match_queue = await channel.declare_queue(MATCH_CREATED_QUEUE, durable=True)
-        await match_queue.bind(exchange, routing_key=MATCH_CREATED_ROUTING_KEY)
+        _ = await match_queue.bind(exchange, routing_key=MATCH_CREATED_ROUTING_KEY)
 
         log.info("notifications consumer started", queues=[LIKE_RECEIVED_QUEUE, MATCH_CREATED_QUEUE])
 
@@ -99,6 +102,7 @@ class NotificationsConsumer:
             liker_name = liker_profile.name if liker_profile else "Кто-то"
             liker_username = await self._get_username(liker_telegram_id)
             liker_handle = f" ({liker_username})" if liker_username else ""
+            already_matched = self._has_recent_match(liked_telegram_id, liker_telegram_id)
 
             text = (
                 f"❤️ {liker_name}{liker_handle} поставил(а) тебе лайк!\n\n"
@@ -106,7 +110,7 @@ class NotificationsConsumer:
             )
 
             try:
-                await self._bot.send_message(chat_id=liked_telegram_id, text=text)
+                _ = await self._bot.send_message(chat_id=liked_telegram_id, text=text)
             except Exception:
                 log.warning(
                     "failed to send like intro notification (user may have blocked bot)",
@@ -119,12 +123,13 @@ class NotificationsConsumer:
                 _ = await self._bot.send_message(
                     chat_id=liked_telegram_id,
                     text=f"Анкета пользователя: {liker_name}",
-                    reply_markup=_build_browse_kb(liker_telegram_id),
+                    reply_markup=None if already_matched else _build_browse_kb(liker_telegram_id),
                 )
                 log.info(
                     "like notification sent without profile data",
                     liker=liker_telegram_id,
                     liked=liked_telegram_id,
+                    already_matched=already_matched,
                 )
                 return
 
@@ -134,6 +139,7 @@ class NotificationsConsumer:
                     chat_id=liked_telegram_id,
                     candidate=liker_profile,
                     profile_service=self._profile_service,
+                    with_actions=not already_matched,
                 )
             except Exception:
                 log.exception(
@@ -153,13 +159,14 @@ class NotificationsConsumer:
                     chat_id=liked_telegram_id,
                     text=fallback_text,
                     parse_mode="HTML",
-                    reply_markup=_build_browse_kb(liker_telegram_id),
+                    reply_markup=None if already_matched else _build_browse_kb(liker_telegram_id),
                 )
 
             log.info(
                 "like notification sent",
                 liker=liker_telegram_id,
                 liked=liked_telegram_id,
+                already_matched=already_matched,
             )
         except Exception:
             log.exception("failed to process like.received event")
@@ -192,7 +199,7 @@ class NotificationsConsumer:
 
             for user_id, text in [(user1_telegram_id, text1), (user2_telegram_id, text2)]:
                 try:
-                    await self._bot.send_message(chat_id=user_id, text=text)
+                    _ = await self._bot.send_message(chat_id=user_id, text=text)
                     log.info("match notification sent", user_id=user_id)
                 except Exception:
                     log.warning(
@@ -205,5 +212,25 @@ class NotificationsConsumer:
                 user1=user1_telegram_id,
                 user2=user2_telegram_id,
             )
+            self._mark_recent_match(user1_telegram_id, user2_telegram_id)
         except Exception:
             log.exception("failed to process match.created event")
+
+    def _mark_recent_match(self, user1_id: int, user2_id: int) -> None:
+        now = time.monotonic()
+        self._recent_matches[(user1_id, user2_id)] = now
+        self._recent_matches[(user2_id, user1_id)] = now
+        self._cleanup_recent_matches(now)
+
+    def _has_recent_match(self, user_id: int, other_id: int) -> bool:
+        now = time.monotonic()
+        self._cleanup_recent_matches(now)
+        ts = self._recent_matches.get((user_id, other_id))
+        if ts is None:
+            return False
+        return now - ts <= RECENT_MATCH_TTL_SECONDS
+
+    def _cleanup_recent_matches(self, now: float) -> None:
+        stale_keys = [pair for pair, ts in self._recent_matches.items() if now - ts > RECENT_MATCH_TTL_SECONDS]
+        for key in stale_keys:
+            _ = self._recent_matches.pop(key, None)

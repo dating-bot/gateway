@@ -133,6 +133,7 @@ async def _send_candidate_profile(
     candidate,
     profile_service: FromDishka[ProfileServiceProtocol],
     queue_len: int | None = None,
+    with_actions: bool = True,
 ) -> None:
     gender_label = {"male": "Мужчина", "female": "Женщина"}.get(candidate.gender.value, "—")
     text = _profile_caption_html(candidate.name, candidate.age, candidate.city, gender_label, candidate.bio)
@@ -156,21 +157,24 @@ async def _send_candidate_profile(
                 chat_id=chat_id,
                 text=text,
                 parse_mode="HTML",
-                reply_markup=_build_browse_kb(candidate.telegram_id),
+                reply_markup=_build_browse_kb(candidate.telegram_id) if with_actions else None,
             )
             return
 
         await _send_profile_photos_to_chat(bot, chat_id, text, buffers)
-        _ = await bot.send_message(
-            chat_id=chat_id, text="Выбери действие:", reply_markup=_build_browse_kb(candidate.telegram_id)
-        )
+        if with_actions:
+            _ = await bot.send_message(
+                chat_id=chat_id, text="Выбери действие:", reply_markup=_build_browse_kb(candidate.telegram_id)
+            )
     except Exception:
-        log.exception("candidate media send failed, falling back to text only", candidate_telegram_id=candidate.telegram_id)
+        log.exception(
+            "candidate media send failed, falling back to text only", candidate_telegram_id=candidate.telegram_id
+        )
         _ = await bot.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="HTML",
-            reply_markup=_build_browse_kb(candidate.telegram_id),
+            reply_markup=_build_browse_kb(candidate.telegram_id) if with_actions else None,
         )
 
 
@@ -280,7 +284,7 @@ async def handle_menu_browse(
         _ = await query.answer("Ошибка сообщения")
         return
 
-    await _send_next_candidate(
+    _ = await _send_next_candidate(
         telegram_id=query.from_user.id,
         message=query.message,
         get_profile=get_profile,
@@ -371,8 +375,6 @@ async def handle_menu_dating_status(
         _ = await query.answer("Сначала создай профиль через /start")
         return
 
-    result = await check_dating_status.execute(
-        CheckDatingStatus.Request(telegram_id=query.from_user.id)
-    )
+    result = await check_dating_status.execute(CheckDatingStatus.Request(telegram_id=query.from_user.id))
     _ = await query.message.answer(result.text, parse_mode="HTML", reply_markup=_MORE_MENU_KB)
     _ = await query.answer()
