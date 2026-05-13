@@ -20,7 +20,6 @@ super_like:{profile_id}:
   handler: handle_super_like
   requires:
     active: true
-    subscription: PREMIUM
 
 menu:profile:view:
   handler: handle_profile_view
@@ -77,8 +76,52 @@ menu:settings:
   handler: handle_settings
   requires: {}
 
+settings:search:
+  handler: handle_settings_search
+  requires: {}
+
+settings:search:gender:{gender}:
+  handler: handle_settings_search_gender
+  requires: {}
+
+settings:search:age:{age}:
+  handler: handle_settings_search_age
+  requires: {}
+
+settings:search:distance:{km}:
+  handler: handle_settings_search_distance
+  requires: {}
+
+settings:profile:pause:
+  handler: handle_settings_profile_pause
+  requires: {}
+
+settings:profile:resume:
+  handler: handle_settings_profile_resume
+  requires: {}
+
+settings:premium:
+  handler: handle_settings_premium
+  requires: {}
+
+settings:support:
+  handler: handle_settings_support
+  requires: {}
+
+settings:terms:
+  handler: handle_settings_terms
+  requires: {}
+
 billing:subscribe:
   handler: handle_subscribe
+  requires: {}
+
+billing:subscribe:stars:
+  handler: handle_subscribe_stars
+  requires: {}
+
+billing:subscribe:provider:
+  handler: handle_subscribe_provider
   requires: {}
 
 billing:boost:

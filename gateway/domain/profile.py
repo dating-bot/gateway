@@ -9,6 +9,11 @@ class Gender(StrEnum):
     FEMALE = "female"
 
 
+class SubscriptionTier(StrEnum):
+    FREE = "free"
+    PREMIUM = "premium"
+
+
 @dataclass(frozen=True, slots=True)
 class PhotoInfo:
     photo_id: int
@@ -27,3 +32,6 @@ class Profile:
     photos: list[PhotoInfo] = field(default_factory=list)
     latitude: float | None = None
     longitude: float | None = None
+    subscription_tier: SubscriptionTier = SubscriptionTier.FREE
+    subscription_expires_at_seconds: int | None = None
+    is_active: bool = True

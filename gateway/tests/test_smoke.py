@@ -51,9 +51,9 @@ def test_radix_tree_no_match() -> None:
 
 def test_radix_callback_router_adapter() -> None:
     adapter = RadixCallbackRouterAdapter()
-    adapter.insert("super_like:{profile_id}", "handle_super_like", {"subscription": "PREMIUM"})
+    adapter.insert("super_like:{profile_id}", "handle_super_like", {"active": True})
     result = adapter.match("super_like:999")
     assert result is not None
     assert result.handler_id == "handle_super_like"
     assert result.path_params == {"profile_id": "999"}
-    assert result.requires == {"subscription": "PREMIUM"}
+    assert result.requires == {"active": True}

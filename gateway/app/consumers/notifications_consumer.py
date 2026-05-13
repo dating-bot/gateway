@@ -97,6 +97,7 @@ class NotificationsConsumer:
             data = json.loads(message.body)
             liker_telegram_id = int(data["liker_telegram_id"])
             liked_telegram_id = int(data["liked_telegram_id"])
+            like_status = str(data.get("status", "liked")).strip().lower()
 
             liker_profile = await self._profile_service.get_profile(liker_telegram_id)
             liker_name = liker_profile.name if liker_profile else "Кто-то"
@@ -104,10 +105,16 @@ class NotificationsConsumer:
             liker_handle = f" ({liker_username})" if liker_username else ""
             already_matched = self._has_recent_match(liked_telegram_id, liker_telegram_id)
 
-            text = (
-                f"❤️ {liker_name}{liker_handle} поставил(а) тебе лайк!\n\n"
-                "Вот его анкета — можешь ответить взаимно прямо сейчас 👇"
-            )
+            if like_status == "superliked":
+                text = (
+                    f"⭐ {liker_name}{liker_handle} отправил(а) тебе SUPER LIKE!\n\n"
+                    "Это приоритетный интерес. Посмотри анкету и ответь взаимно 👇"
+                )
+            else:
+                text = (
+                    f"❤️ {liker_name}{liker_handle} поставил(а) тебе лайк!\n\n"
+                    "Вот его анкета — можешь ответить взаимно прямо сейчас 👇"
+                )
 
             try:
                 _ = await self._bot.send_message(chat_id=liked_telegram_id, text=text)
@@ -166,6 +173,7 @@ class NotificationsConsumer:
                 "like notification sent",
                 liker=liker_telegram_id,
                 liked=liked_telegram_id,
+                like_status=like_status,
                 already_matched=already_matched,
             )
         except Exception:

@@ -12,6 +12,7 @@ from gateway.app.telegram.fsm.registration import registration_router
 from gateway.app.telegram.handlers.callback_reply import callback_router
 from gateway.app.telegram.handlers.commands import commands_router
 from gateway.app.telegram.handlers.geo import geo_router
+from gateway.app.telegram.handlers.payments import payments_router
 from gateway.app.telegram.handlers.profile_photos import profile_photos_router
 from gateway.app.telegram.middleware import (
     CallbackRadixAclMiddleware,
@@ -36,6 +37,8 @@ async def configure_bot_menu(bot: Bot) -> None:
         BotCommand(command="start", description="Запустить бота"),
         BotCommand(command="browse", description="Смотреть анкеты"),
         BotCommand(command="cancel", description="Отменить текущее действие"),
+        BotCommand(command="terms", description="Условия сервиса"),
+        BotCommand(command="support", description="Поддержка"),
     ]
     _ = await bot.set_my_commands(commands=commands)
     _ = await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
@@ -72,6 +75,7 @@ def create_dispatcher(  # noqa: PLR0913
     _ = dp.include_router(edit_profile_router)
     _ = dp.include_router(profile_photos_router)
     _ = dp.include_router(geo_router)
+    _ = dp.include_router(payments_router)
     _ = dp.include_router(callback_router)
 
     return dp

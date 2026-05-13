@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from gateway.domain.profile import Gender, Profile
+from gateway.domain.profile import Gender, Profile, SubscriptionTier
 
 
 class ProfileServiceProtocol(Protocol):
+    @dataclass
+    class Preferences:
+        gender_pref: Gender
+        age_min: int
+        age_max: int
+        max_distance_km: int
+
     @dataclass
     class CreateRequest:
         telegram_id: int
@@ -49,3 +56,15 @@ class ProfileServiceProtocol(Protocol):
         max_distance_km: int
 
     async def set_preferences(self, request: "ProfileServiceProtocol.SetPreferencesRequest") -> None: ...
+    async def get_preferences(self, telegram_id: int) -> "ProfileServiceProtocol.Preferences | None": ...
+
+    @dataclass
+    class ActivateSubscriptionRequest:
+        telegram_id: int
+        tier: SubscriptionTier
+        duration_seconds: int
+        telegram_payment_charge_id: str | None = None
+        provider_payment_charge_id: str | None = None
+        invoice_payload: str | None = None
+
+    async def activate_subscription(self, request: "ProfileServiceProtocol.ActivateSubscriptionRequest") -> int: ...

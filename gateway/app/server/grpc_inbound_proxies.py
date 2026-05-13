@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, final, override
 
 import structlog
+import structlog.contextvars
 from google.protobuf.message import Message
 from grpclib.const import Status
 from grpclib.exceptions import GRPCError
@@ -39,7 +40,9 @@ async def _proxy_unary[Resp: Message](
 ) -> Message:
     try:
         req = _align_for_stub_method(stub_method, request)
-        resp: Message = await stub_method(req)
+        trace_id = str(structlog.contextvars.get_contextvars().get("trace_id") or "")
+        metadata = [("trace_id", trace_id)] if trace_id else None
+        resp: Message = await stub_method(req, metadata=metadata)
         return _align_response_for_handler(response_message_cls, resp)
     except GRPCError:
         raise
@@ -167,6 +170,18 @@ class ProfileGrpcInboundProxy(ProfileServiceBase):
             stub_method=self._stub.GetPreferences,
             request=request,
             response_message_cls=profile_pb2.GetPreferencesResponse,
+        )  # type: ignore[return-value]
+
+    @override
+    @unary
+    async def ActivateSubscription(
+        self, request: profile_pb2.ActivateSubscriptionRequest
+    ) -> profile_pb2.ActivateSubscriptionResponse:
+        return await _proxy_unary(
+            upstream="profile-service",
+            stub_method=self._stub.ActivateSubscription,
+            request=request,
+            response_message_cls=profile_pb2.ActivateSubscriptionResponse,
         )  # type: ignore[return-value]
 
 

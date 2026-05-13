@@ -111,6 +111,21 @@ async def handle_cancel(message: Message, state: FSMContext) -> None:
     _ = await message.answer("Действие отменено.")
 
 
+@commands_router.message(Command("terms"))
+async def handle_terms(message: Message) -> None:
+    _ = await message.answer(
+        "Условия использования:\n"
+        "1) Подписка активируется после подтвержденного платежа.\n"
+        "2) Доступ к Premium действует в течение оплаченного периода.\n"
+        "3) Для вопросов по оплатам используйте /support."
+    )
+
+
+@commands_router.message(Command("support"))
+async def handle_support(message: Message) -> None:
+    _ = await message.answer("Поддержка: напишите @support или ответьте на это сообщение с описанием проблемы.")
+
+
 def _build_browse_kb(profile_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -209,6 +224,15 @@ async def _send_next_candidate(  # noqa: PLR0913
             )
             continue
         if cache is not None:
+            paused_key = f"profile:paused:{candidate_telegram_id}"
+            paused = await cache.get(paused_key, unmarshal_as=int)
+            if paused is not None:
+                log.info(
+                    "paused candidate returned, retrying next",
+                    telegram_id=telegram_id,
+                    candidate_telegram_id=candidate_telegram_id,
+                )
+                continue
             seen_key = f"seen:{telegram_id}:{candidate_telegram_id}"
             already_seen = await cache.get(seen_key, unmarshal_as=int)
             if already_seen is not None:
@@ -260,7 +284,7 @@ async def handle_browse(
     cache: FromDishka[CacheProtocol],
 ) -> None:
     telegram_id = message.from_user.id if message.from_user else 0
-    await _send_next_candidate(
+    _ = await _send_next_candidate(
         telegram_id=telegram_id,
         message=message,
         get_profile=get_profile,

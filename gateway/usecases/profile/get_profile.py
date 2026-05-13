@@ -4,7 +4,7 @@ from typing import final
 import pydantic
 import structlog
 
-from gateway.domain.profile import Gender, PhotoInfo, Profile
+from gateway.domain.profile import Gender, PhotoInfo, Profile, SubscriptionTier
 from gateway.protocols.cache import CacheProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
 
@@ -30,6 +30,9 @@ class _CachedProfile(pydantic.BaseModel):
     photos: list[dict[str, object]] = pydantic.Field(default_factory=list)
     latitude: float | None = None
     longitude: float | None = None
+    subscription_tier: str = SubscriptionTier.FREE.value
+    subscription_expires_at_seconds: int | None = None
+    is_active: bool = True
 
     @classmethod
     def from_domain(cls, p: Profile) -> "_CachedProfile":
@@ -44,6 +47,9 @@ class _CachedProfile(pydantic.BaseModel):
             photos=[{"photo_id": ph.photo_id, "is_active": ph.is_active} for ph in p.photos],
             latitude=p.latitude,
             longitude=p.longitude,
+            subscription_tier=p.subscription_tier.value,
+            subscription_expires_at_seconds=p.subscription_expires_at_seconds,
+            is_active=p.is_active,
         )
 
     def to_domain(self) -> Profile:
@@ -58,6 +64,9 @@ class _CachedProfile(pydantic.BaseModel):
             photos=[PhotoInfo(photo_id=int(ph["photo_id"]), is_active=bool(ph["is_active"])) for ph in self.photos],
             latitude=self.latitude,
             longitude=self.longitude,
+            subscription_tier=SubscriptionTier(self.subscription_tier),
+            subscription_expires_at_seconds=self.subscription_expires_at_seconds,
+            is_active=self.is_active,
         )
 
 

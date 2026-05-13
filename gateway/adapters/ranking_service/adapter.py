@@ -33,9 +33,7 @@ class RankingServiceAdapter(RankingServiceProtocol):
             return None
 
     @override
-    async def get_viewer_queue_state(
-        self, viewer_id: int
-    ) -> tuple[int, int, list[int]] | None:
+    async def get_viewer_queue_state(self, viewer_id: int) -> tuple[int, int, list[int]] | None:
         try:
             resp = await self._stub.GetViewerQueueState(GetViewerQueueStateRequest(viewer_id=viewer_id))
             return (

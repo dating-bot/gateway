@@ -58,6 +58,10 @@ class ProfileServiceBase(abc.ABC):
     async def GetPreferences(self, stream: 'grpclib.server.Stream[profile_api.v1.profile_pb2.GetPreferencesRequest, profile_api.v1.profile_pb2.GetPreferencesResponse]') -> None:
         pass
 
+    @abc.abstractmethod
+    async def ActivateSubscription(self, stream: 'grpclib.server.Stream[profile_api.v1.profile_pb2.ActivateSubscriptionRequest, profile_api.v1.profile_pb2.ActivateSubscriptionResponse]') -> None:
+        pass
+
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
         return {
             '/profile_api.v1.ProfileService/Health': grpclib.const.Handler(
@@ -125,6 +129,12 @@ class ProfileServiceBase(abc.ABC):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 profile_api.v1.profile_pb2.GetPreferencesRequest,
                 profile_api.v1.profile_pb2.GetPreferencesResponse,
+            ),
+            '/profile_api.v1.ProfileService/ActivateSubscription': grpclib.const.Handler(
+                self.ActivateSubscription,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                profile_api.v1.profile_pb2.ActivateSubscriptionRequest,
+                profile_api.v1.profile_pb2.ActivateSubscriptionResponse,
             ),
         }
 
@@ -197,4 +207,10 @@ class ProfileServiceStub:
             '/profile_api.v1.ProfileService/GetPreferences',
             profile_api.v1.profile_pb2.GetPreferencesRequest,
             profile_api.v1.profile_pb2.GetPreferencesResponse,
+        )
+        self.ActivateSubscription = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/profile_api.v1.ProfileService/ActivateSubscription',
+            profile_api.v1.profile_pb2.ActivateSubscriptionRequest,
+            profile_api.v1.profile_pb2.ActivateSubscriptionResponse,
         )

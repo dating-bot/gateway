@@ -1,9 +1,11 @@
 import asyncio
+import time
 from typing import final
 
 import pydantic
 import structlog
 
+from gateway.domain.profile import SubscriptionTier
 from gateway.protocols.match_service import MatchServiceProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
 from gateway.protocols.ranking_service import RankingServiceProtocol
@@ -34,15 +36,26 @@ class CheckDatingStatus:
 
     async def execute(self, request: Request) -> Response:
         """Load queue snapshot and last match (diagnostics, no queue side effects)."""
-        q_task = asyncio.create_task(
-            self._ranking_service.get_viewer_queue_state(request.telegram_id)
-        )
-        m_task = asyncio.create_task(
-            self._match_service.list_user_matches(request.telegram_id, limit=1)
-        )
-        q_state, matches = await asyncio.gather(q_task, m_task)
+        q_task = asyncio.create_task(self._ranking_service.get_viewer_queue_state(request.telegram_id))
+        m_task = asyncio.create_task(self._match_service.list_user_matches(request.telegram_id, limit=1))
+        p_task = asyncio.create_task(self._profile_service.get_profile(request.telegram_id))
+        q_state, matches, profile = await asyncio.gather(q_task, m_task, p_task)
 
         lines: list[str] = ["<b>Диагностика: лента и мэтчи</b>"]
+        if profile is not None:
+            expires_at = profile.subscription_expires_at_seconds or 0
+            is_premium = profile.subscription_tier == SubscriptionTier.PREMIUM and expires_at > int(time.time())
+            if is_premium:
+                lines.append(
+                    f"\nПодписка: <b>Premium</b> до <code>{expires_at}</code> (unix)\n"
+                    "Плюшки: безлимитный <b>Super Like</b> и <b>Undo</b>"
+                )
+            else:
+                lines.append(
+                    "\nПодписка: <b>Free</b>\n"
+                    "Лимиты: лайки 50/день, Super Like 1/день, Undo 3/день"
+                )
+
         if q_state is None:
             lines.append("\nОчередь: <i>не удалось получить (см. логи)</i>")
         else:
