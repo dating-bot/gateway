@@ -49,28 +49,23 @@ menu:dating:status:
 
 menu:profile:edit:
   handler: handle_profile_edit
-  requires:
-    active: true
+  requires: {}
 
 profile:photos:menu:
   handler: handle_profile_photos_menu
-  requires:
-    active: true
+  requires: {}
 
 photos:add:
   handler: handle_photos_add
-  requires:
-    active: true
+  requires: {}
 
 photos:del:{photo_id}:
   handler: handle_photos_delete
-  requires:
-    active: true
+  requires: {}
 
 edit:{field}:
   handler: handle_edit_field_select
-  requires:
-    active: true
+  requires: {}
 
 menu:settings:
   handler: handle_settings

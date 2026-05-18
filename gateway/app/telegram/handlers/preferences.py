@@ -351,7 +351,7 @@ async def handle_settings_support(
     _ = await query.message.answer(
         "Поддержка:\n"
         "1) Опиши проблему сообщением в этот чат.\n"
-        "2) Или напиши @support.\n"
+        "2) Или напиши @gipsylll.\n"
         "3) По оплатам приложи скрин и время платежа.",
         reply_markup=kb,
     )
