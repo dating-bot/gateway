@@ -6,6 +6,7 @@ import structlog
 import structlog.contextvars
 
 from gateway.infra.rabbitmq import RabbitMQConfig
+from gateway.infra.tracing import current_trace_id, inject_trace_headers
 from gateway.protocols.events import EventPublisherProtocol
 
 log = structlog.stdlib.get_logger("gateway.adapters.RabbitMQPublisher")
@@ -34,8 +35,8 @@ class RabbitMQPublisherAdapter(EventPublisherProtocol):
             await self.initialize()
 
         current = structlog.contextvars.get_contextvars()
-        trace_id = str(current.get("trace_id") or uuid4().hex)
-        merged_headers = {"trace_id": trace_id, **(headers or {})}
+        trace_id = str(current.get("trace_id") or current_trace_id() or uuid4().hex)
+        merged_headers = inject_trace_headers({"trace_id": trace_id, **(headers or {})})
 
         message = aio_pika.Message(
             body=body,

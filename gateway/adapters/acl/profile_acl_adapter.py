@@ -7,6 +7,7 @@ from gateway.domain.profile import SubscriptionTier
 from gateway.protocols.acl import AclCheckerProtocol
 from gateway.protocols.cache import CacheProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
+from gateway.usecases.dating.profile_access import ProfileAccessGuard, ProfileAccessReason
 
 log = structlog.stdlib.get_logger("gateway.adapters.ProfileAclAdapter")
 
@@ -28,27 +29,31 @@ class ProfileAclAdapter(AclCheckerProtocol):
         self._cache = cache
 
     @override
-    async def check(self, user_id: int, requires: dict[str, object]) -> bool:  # noqa: C901
+    async def check(self, user_id: int, requires: dict[str, object]) -> AclCheckerProtocol.Decision:  # noqa: C901
         if not requires:
-            return True
+            return AclCheckerProtocol.Decision(allowed=True)
 
         profile = None
         if requires.get("active"):
-            profile = await self._profile_service.get_profile(user_id)
-            if profile is None:
-                log.debug("acl denied: no profile", user_id=user_id)
-                return False
-            paused = await self._cache.get(f"profile:paused:{user_id}", unmarshal_as=int)
-            if paused is not None:
+            access = await ProfileAccessGuard.evaluate(
+                telegram_id=user_id,
+                profile_service=self._profile_service,
+                cache=self._cache,
+            )
+            if not access.allowed:
+                if access.reason == ProfileAccessReason.NO_PROFILE:
+                    log.debug("acl denied: no profile", user_id=user_id)
+                    return AclCheckerProtocol.Decision(allowed=False, reason="no_profile")
                 log.info("acl denied: profile paused", user_id=user_id)
-                return False
+                return AclCheckerProtocol.Decision(allowed=False, reason="paused")
+            profile = access.profile
 
         if "subscription" in requires:
             if profile is None:
                 profile = await self._profile_service.get_profile(user_id)
             if profile is None:
                 log.debug("acl denied: no profile for subscription", user_id=user_id)
-                return False
+                return AclCheckerProtocol.Decision(allowed=False, reason="no_profile")
 
             required = str(requires["subscription"]).strip().upper()
             if required == "PREMIUM":
@@ -62,10 +67,10 @@ class ProfileAclAdapter(AclCheckerProtocol):
                         expires_at=expires_at,
                         now=now,
                     )
-                    return False
+                    return AclCheckerProtocol.Decision(allowed=False, reason="subscription_required")
 
         if "role" in requires:
             # role-проверка пока заглушка (always allow)
             log.debug("acl role check — stub, always allow", user_id=user_id)
 
-        return True
+        return AclCheckerProtocol.Decision(allowed=True)

@@ -151,9 +151,7 @@ async def _show_settings_root(
     effective_paused = paused or (fresh_profile is not None and not fresh_profile.is_active)
     status = "⏸ На паузе" if effective_paused else "✅ Активна"
     _ = await query.message.answer(
-        "⚙️ Настройки\n\n"
-        f"Статус анкеты: {status}\n"
-        "Здесь можно управлять поиском, видимостью и Premium.",
+        f"⚙️ Настройки\n\nСтатус анкеты: {status}\nЗдесь можно управлять поиском, видимостью и Premium.",
         reply_markup=_settings_root_kb(paused=effective_paused),
     )
     _ = await query.answer()
@@ -349,9 +347,7 @@ async def handle_settings_support(
     if query.message is None:
         _ = await query.answer("Ошибка сообщения")
         return
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="menu:settings")]]
-    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="menu:settings")]])
     _ = await query.message.answer(
         "Поддержка:\n"
         "1) Опиши проблему сообщением в этот чат.\n"
@@ -370,9 +366,7 @@ async def handle_settings_terms(
     if query.message is None:
         _ = await query.answer("Ошибка сообщения")
         return
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="menu:settings")]]
-    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="menu:settings")]])
     _ = await query.message.answer(
         "Условия использования:\n"
         "1) Подписка активируется после подтвержденного платежа.\n"

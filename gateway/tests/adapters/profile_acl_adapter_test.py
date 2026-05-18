@@ -30,6 +30,7 @@ async def test_acl_denies_active_when_profile_paused() -> None:
 
     acl = ProfileAclAdapter(profile_service=profile_service, cache=cache)
 
-    allowed = await acl.check(1001, {"active": True})
+    decision = await acl.check(1001, {"active": True})
 
-    assert allowed is False
+    assert decision.allowed is False
+    assert decision.reason == "paused"

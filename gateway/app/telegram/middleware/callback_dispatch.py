@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, TelegramObject, Update
 
 from gateway.protocols.acl import AclCheckerProtocol
 from gateway.usecases.callback_routing.resolve import ResolveCallbackRoute
+from gateway.usecases.dating.profile_access import ProfileAccessGuard
 
 log = structlog.stdlib.get_logger("gateway.middleware.CallbackRadixAclMiddleware")
 
@@ -44,9 +45,18 @@ class CallbackRadixAclMiddleware(BaseMiddleware):
             await query.answer("❓ Неизвестная команда")
             return None
 
-        allowed = await self._acl.check(user_id, resolved.requires)
-        if not allowed:
-            log.info("acl denied", user_id=user_id, handler_id=resolved.handler_id)
+        decision = await self._acl.check(user_id, resolved.requires)
+        if not decision.allowed:
+            log.info("acl denied", user_id=user_id, handler_id=resolved.handler_id, reason=decision.reason)
+            if decision.reason == "paused":
+                message = ProfileAccessGuard.paused_message()
+                await query.answer("⏸ Анкета на проверке", show_alert=True)
+                if query.message is not None:
+                    _ = await query.message.answer(message)
+                return None
+            if decision.reason == "no_profile":
+                await query.answer("Сначала создай профиль через /start")
+                return None
             await query.answer("🚫 Нет доступа")
             return None
 

@@ -11,6 +11,9 @@ services:
     networks:
       - dating_bot_net
     command: ["uv", "-q", "run", "python3", "-m", "gateway"]
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_EXPORTER_OTLP_INSECURE: ${OTEL_EXPORTER_OTLP_INSECURE:-true}
     ports:
       - "50051:50051"
       - "8080:8080"

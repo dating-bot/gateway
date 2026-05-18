@@ -103,10 +103,7 @@ async def handle_subscribe(
         ]
     )
     _ = await query.message.answer(
-        "Premium включает:\n"
-        "• безлимитный Super Like\n"
-        "• безлимитный Undo\n\n"
-        "Выбери способ оплаты:",
+        "Premium включает:\n• безлимитный Super Like\n• безлимитный Undo\n\nВыбери способ оплаты:",
         reply_markup=kb,
     )
     _ = await query.answer()

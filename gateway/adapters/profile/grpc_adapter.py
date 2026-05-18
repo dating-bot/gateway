@@ -1,6 +1,7 @@
 from typing import final, override
 
 import structlog
+import structlog.contextvars
 
 from external_clients.profile_api.v1.profile_grpc import ProfileServiceStub
 from external_clients.profile_api.v1.profile_pb2 import (
@@ -22,6 +23,7 @@ from external_clients.profile_api.v1.profile_pb2 import (
 from gateway.domain.profile import Gender as DomainGender
 from gateway.domain.profile import PhotoInfo, Profile
 from gateway.domain.profile import SubscriptionTier as DomainSubscriptionTier
+from gateway.infra.tracing import current_trace_id, inject_grpc_metadata
 from gateway.protocols.profile import ProfileServiceProtocol
 
 log = structlog.stdlib.get_logger("gateway.adapters.GrpcProfileServiceAdapter")
@@ -63,9 +65,13 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
     def __init__(self, *, stub: ProfileServiceStub) -> None:
         self._stub = stub
 
+    def _grpc_metadata(self) -> list[tuple[str, str]] | None:
+        trace_id = str(structlog.contextvars.get_contextvars().get("trace_id") or current_trace_id() or "")
+        return inject_grpc_metadata([("trace_id", trace_id)] if trace_id else None)
+
     @override
     async def get_profile(self, telegram_id: int) -> Profile | None:
-        resp = await self._stub.GetProfile(GetProfileRequest(telegram_id=telegram_id))
+        resp = await self._stub.GetProfile(GetProfileRequest(telegram_id=telegram_id), metadata=self._grpc_metadata())
         if not resp.found:
             return None
         return Profile(
@@ -88,7 +94,10 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
 
     @override
     async def get_profile_by_id(self, profile_id: int) -> Profile | None:
-        resp = await self._stub.GetProfileById(GetProfileByIdRequest(profile_id=profile_id))
+        resp = await self._stub.GetProfileById(
+            GetProfileByIdRequest(profile_id=profile_id),
+            metadata=self._grpc_metadata(),
+        )
         if not resp.found:
             return None
 
@@ -140,7 +149,8 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
                 gender=_GENDER_MAP.get(request.gender, Gender.GENDER_UNSPECIFIED),
                 latitude=request.latitude,
                 longitude=request.longitude,
-            )
+            ),
+            metadata=self._grpc_metadata(),
         )
         return resp.profile_id
 
@@ -153,27 +163,38 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
                 age=request.age,
                 city=request.city,
                 bio=request.bio,
-            )
+            ),
+            metadata=self._grpc_metadata(),
         )
 
     @override
     async def set_geo(self, telegram_id: int, latitude: float, longitude: float) -> None:
-        _ = await self._stub.SetGeo(SetGeoRequest(telegram_id=telegram_id, latitude=latitude, longitude=longitude))
+        _ = await self._stub.SetGeo(
+            SetGeoRequest(telegram_id=telegram_id, latitude=latitude, longitude=longitude),
+            metadata=self._grpc_metadata(),
+        )
 
     @override
     async def upload_photo(self, telegram_id: int, data: bytes, content_type: str) -> int:
         resp = await self._stub.UploadPhoto(
-            UploadPhotoRequest(telegram_id=telegram_id, data=data, content_type=content_type)
+            UploadPhotoRequest(telegram_id=telegram_id, data=data, content_type=content_type),
+            metadata=self._grpc_metadata(),
         )
         return resp.photo_id
 
     @override
     async def delete_photo(self, telegram_id: int, photo_id: int) -> None:
-        _ = await self._stub.DeletePhoto(DeletePhotoRequest(telegram_id=telegram_id, photo_id=photo_id))
+        _ = await self._stub.DeletePhoto(
+            DeletePhotoRequest(telegram_id=telegram_id, photo_id=photo_id),
+            metadata=self._grpc_metadata(),
+        )
 
     @override
     async def get_presigned_url(self, photo_id: int) -> str:
-        resp = await self._stub.GetPresignedUrl(GetPresignedUrlRequest(photo_id=photo_id))
+        resp = await self._stub.GetPresignedUrl(
+            GetPresignedUrlRequest(photo_id=photo_id),
+            metadata=self._grpc_metadata(),
+        )
         return resp.url
 
     @override
@@ -185,12 +206,16 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
                 age_min=request.age_min,
                 age_max=request.age_max,
                 max_distance_km=request.max_distance_km,
-            )
+            ),
+            metadata=self._grpc_metadata(),
         )
 
     @override
     async def get_preferences(self, telegram_id: int) -> ProfileServiceProtocol.Preferences | None:
-        resp = await self._stub.GetPreferences(GetPreferencesRequest(telegram_id=telegram_id))
+        resp = await self._stub.GetPreferences(
+            GetPreferencesRequest(telegram_id=telegram_id),
+            metadata=self._grpc_metadata(),
+        )
         if not resp.found:
             return None
         return ProfileServiceProtocol.Preferences(
@@ -210,6 +235,7 @@ class GrpcProfileServiceAdapter(ProfileServiceProtocol):
                 telegram_payment_charge_id=request.telegram_payment_charge_id or "",
                 provider_payment_charge_id=request.provider_payment_charge_id or "",
                 invoice_payload=request.invoice_payload or "",
-            )
+            ),
+            metadata=self._grpc_metadata(),
         )
         return resp.subscription_expires_at_seconds

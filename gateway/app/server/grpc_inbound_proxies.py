@@ -13,6 +13,7 @@ from external_clients.match_api.v1.match_grpc import MatchServiceBase, MatchServ
 from external_clients.profile_api.v1.profile_grpc import ProfileServiceBase, ProfileServiceStub
 from external_clients.ranking_api.v1.ranking_grpc import RankingServiceBase, RankingServiceStub
 from gateway.app.server.utils import unary
+from gateway.infra.tracing import current_trace_id, inject_grpc_metadata
 from profile_api.v1 import profile_pb2
 
 log = structlog.stdlib.get_logger("gateway.grpc.inbound_proxies")
@@ -40,8 +41,8 @@ async def _proxy_unary[Resp: Message](
 ) -> Message:
     try:
         req = _align_for_stub_method(stub_method, request)
-        trace_id = str(structlog.contextvars.get_contextvars().get("trace_id") or "")
-        metadata = [("trace_id", trace_id)] if trace_id else None
+        trace_id = str(structlog.contextvars.get_contextvars().get("trace_id") or current_trace_id() or "")
+        metadata = inject_grpc_metadata([("trace_id", trace_id)] if trace_id else None)
         resp: Message = await stub_method(req, metadata=metadata)
         return _align_response_for_handler(response_message_cls, resp)
     except GRPCError:

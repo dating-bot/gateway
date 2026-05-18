@@ -18,6 +18,7 @@ from gateway.app.server.health import create_health_service
 from gateway.app.server.http.webhook_app import create_webhook_app
 from gateway.app.server.utils import configure_logger
 from gateway.app.telegram.setup import configure_bot_menu, create_bot, create_dispatcher, create_fsm_storage
+from gateway.infra.tracing import setup_tracing
 from gateway.protocols.acl import AclCheckerProtocol
 from gateway.protocols.coordination import CoordinationProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
@@ -45,6 +46,7 @@ async def main() -> None:
         json_mode=not config.debug,
         log_level="DEBUG" if config.debug else "INFO",
     )
+    setup_tracing(service_name="gateway")
     log.info("Starting gateway server")
 
     # gRPC: Gateway Ping + pass-through to profile, ranking, match (same service paths as backend)

@@ -24,6 +24,7 @@ from gateway.protocols.cache import CacheProtocol
 from gateway.protocols.profile import ProfileServiceProtocol
 from gateway.protocols.ranking_service import RankingServiceProtocol
 from gateway.usecases.dating.check_status import CheckDatingStatus
+from gateway.usecases.dating.profile_access import ProfileAccessGuard, ProfileAccessReason
 from gateway.usecases.profile.get_profile import GetProfile
 
 commands_router = Router(name="commands")
@@ -141,7 +142,7 @@ def _build_browse_kb(profile_id: int) -> InlineKeyboardMarkup:
     )
 
 
-async def _send_candidate_profile(
+async def _send_candidate_profile(  # noqa: PLR0913
     *,
     bot: Bot,
     chat_id: int,
@@ -193,7 +194,7 @@ async def _send_candidate_profile(
         )
 
 
-async def _send_next_candidate(  # noqa: PLR0913
+async def _send_next_candidate(  # noqa: C901, PLR0912, PLR0913, PLR0915
     *,
     telegram_id: int,
     message: Message,
@@ -203,7 +204,24 @@ async def _send_next_candidate(  # noqa: PLR0913
     cache: FromDishka[CacheProtocol] | None = None,
     exclude_candidate_ids: set[int] | None = None,
 ) -> int | None:
-    profile = await get_profile.execute(telegram_id)
+    if cache is None:
+        log.warning("browse flow called without cache, access guard disabled", telegram_id=telegram_id)
+        profile = await get_profile.execute(telegram_id)
+    else:
+        profile = await get_profile.execute(telegram_id)
+        access = await ProfileAccessGuard.evaluate(
+            telegram_id=telegram_id,
+            profile_service=profile_service,
+            cache=cache,
+            profile=profile,
+        )
+        if not access.allowed:
+            if access.reason == ProfileAccessReason.NO_PROFILE:
+                _ = await message.answer("Сначала создай профиль через /start")
+            else:
+                _ = await message.answer(ProfileAccessGuard.paused_message())
+            return None
+        profile = access.profile
 
     if profile is None:
         _ = await message.answer("Сначала создай профиль через /start")
@@ -211,11 +229,12 @@ async def _send_next_candidate(  # noqa: PLR0913
 
     max_attempts = 10
     result: tuple[int, int] | None = None
+    candidate = None
     for _ in range(max_attempts):
         result = await ranking_service.get_next_candidate(telegram_id)
         if result is None:
             break
-        candidate_telegram_id, _queue_len = result
+        candidate_telegram_id, _ = result
         if exclude_candidate_ids and candidate_telegram_id in exclude_candidate_ids:
             log.info(
                 "excluded candidate returned, retrying next",
@@ -242,6 +261,17 @@ async def _send_next_candidate(  # noqa: PLR0913
                     candidate_telegram_id=candidate_telegram_id,
                 )
                 continue
+        candidate = await profile_service.get_profile(candidate_telegram_id)
+        if candidate is None:
+            break
+        fresh_candidate = await profile_service.get_profile_by_id(candidate.profile_id)
+        if fresh_candidate is not None and not fresh_candidate.is_active:
+            log.info(
+                "inactive candidate returned, retrying next",
+                telegram_id=telegram_id,
+                candidate_telegram_id=candidate_telegram_id,
+            )
+            continue
         break
 
     if result is None:
@@ -256,7 +286,6 @@ async def _send_next_candidate(  # noqa: PLR0913
         candidate_telegram_id=candidate_telegram_id,
         queue_len=queue_len,
     )
-    candidate = await profile_service.get_profile(candidate_telegram_id)
     if candidate is None:
         log.warning("candidate profile not found", telegram_id=telegram_id, candidate_telegram_id=candidate_telegram_id)
         _ = await message.answer(
@@ -294,7 +323,7 @@ async def handle_browse(
     )
 
 
-async def handle_menu_browse(
+async def handle_menu_browse(  # noqa: PLR0913
     query: CallbackQuery,
     resolved: ResolvedCallback,
     get_profile: FromDishka[GetProfile],

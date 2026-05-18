@@ -51,10 +51,7 @@ class CheckDatingStatus:
                     "Плюшки: безлимитный <b>Super Like</b> и <b>Undo</b>"
                 )
             else:
-                lines.append(
-                    "\nПодписка: <b>Free</b>\n"
-                    "Лимиты: лайки 50/день, Super Like 1/день, Undo 3/день"
-                )
+                lines.append("\nПодписка: <b>Free</b>\nЛимиты: лайки 50/день, Super Like 1/день, Undo 3/день")
 
         if q_state is None:
             lines.append("\nОчередь: <i>не удалось получить (см. логи)</i>")

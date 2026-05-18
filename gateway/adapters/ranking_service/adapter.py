@@ -1,12 +1,14 @@
 from typing import final, override
 
 import structlog
+import structlog.contextvars
 
 from external_clients.ranking_api.v1.ranking_grpc import RankingServiceStub
 from external_clients.ranking_api.v1.ranking_pb2 import (
     GetNextCandidateRequest,
     GetViewerQueueStateRequest,
 )
+from gateway.infra.tracing import current_trace_id, inject_grpc_metadata
 from gateway.protocols.ranking_service import RankingServiceProtocol
 
 log = structlog.stdlib.get_logger("gateway.adapters.RankingServiceAdapter")
@@ -17,10 +19,17 @@ class RankingServiceAdapter(RankingServiceProtocol):
     def __init__(self, *, stub: RankingServiceStub) -> None:
         self._stub = stub
 
+    def _grpc_metadata(self) -> list[tuple[str, str]] | None:
+        trace_id = str(structlog.contextvars.get_contextvars().get("trace_id") or current_trace_id() or "")
+        return inject_grpc_metadata([("trace_id", trace_id)] if trace_id else None)
+
     @override
     async def get_next_candidate(self, viewer_id: int) -> tuple[int, int] | None:
         try:
-            resp = await self._stub.GetNextCandidate(GetNextCandidateRequest(viewer_id=viewer_id))
+            resp = await self._stub.GetNextCandidate(
+                GetNextCandidateRequest(viewer_id=viewer_id),
+                metadata=self._grpc_metadata(),
+            )
             log.info(
                 "get_next_candidate returned",
                 viewer_id=viewer_id,
@@ -35,7 +44,10 @@ class RankingServiceAdapter(RankingServiceProtocol):
     @override
     async def get_viewer_queue_state(self, viewer_id: int) -> tuple[int, int, list[int]] | None:
         try:
-            resp = await self._stub.GetViewerQueueState(GetViewerQueueStateRequest(viewer_id=viewer_id))
+            resp = await self._stub.GetViewerQueueState(
+                GetViewerQueueStateRequest(viewer_id=viewer_id),
+                metadata=self._grpc_metadata(),
+            )
             return (
                 int(resp.queue_len),
                 int(resp.head_candidate_telegram_id),
